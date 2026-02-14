@@ -1,0 +1,57 @@
+.collapse-container {    margin-bottom: 10px;    border: 1px solid #ddd;    border-radius: 5px;  }
+.collapse-header {    background-color: #f7f7f7;    padding: 10px;    cursor: pointer;    font-weight: bold;    border-radius: 5px;  }
+.collapse-content {    padding: 10px;    display: none; /* inizialmente nascosto */    border-top: 1px solid #ddd;    background-color: #f9f9f9;  }
+.collapse-content.show {    display: block; /* visibile quando attivato */  }
+.link-item { display: flex; margin: 2px 0; padding: 5px;border: 1px solid #ccc; border-radius: 4px;        }
+.link { flex: 1; font-weight: bold; }
+.description {flex: 4; padding-left: 0px;}
+.buttons {flex: 1; text-align: right; padding-left: 0px;}
+.centered-div {position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);}
+  
+h1 { text-align: center; margin-bottom: 30px; }
+
+.month { background: white;  border-radius: 12px;  box-shadow: 0 2px 6px rgba(0,0,0,0.1);  margin-bottom: 16px;  overflow: hidden;}
+.month-header {  background-color: #c7d6f6;  color: #0e1799;  padding: 12px 16px;  cursor: pointer;  display: flex;  align-items: center;  justify-content: space-between;  border-radius: 12px 12px 0 0;  transition: background 0.2s;}
+.month-header:hover { background-color: #a8baee; }
+.month-content { display: none; padding: 10px 16px 16px 16px; border-top: 1px solid #eee; }
+.month.open .month-content { display: block; }
+
+select { padding: 4px;  border: 1px solid #ccc;  border-radius: 6px;  font-size: 14px;  width:220px;}
+button {  border: none;  border-radius: 6px;  cursor: pointer;  font-size: 14px;  padding: 6px 10px;  transition: background 0.2s;}
+.save-btn { background-color: #22c55e; color: white; }
+.save-btn:hover { background-color: #16a34a; }
+.delete-btn { background-color: #ef4444; color: white; }
+.delete-btn:hover { background-color: #dc2626; }
+.smart { background-color: #a7f3d0; }
+.presenza { background-color: #dbeafe; }
+.festivita { background-color: #f2adad; }
+.ferie { background-color: #f2c5e7; }
+.supplementare { background-color: #fef9c3; }
+.scoperto { background-color: red; }
+.disabled { background-color: #e0e0e0 !important; color: #777 !important; }
+.today { outline: 3px solid #2563eb; }
+.unsaved { border: 2px dashed orange; background-color: white; }
+.badges-container {  display: flex;  gap: 6px;  margin-left: auto;}
+.badge {  font-size: 0.8rem;  font-weight: 700;  padding: 2px 6px;  border-radius: 12px;  color: white;}
+.badge.smart { background-color: #059669; }
+.badge.presenza { background-color: #3b82f6; }
+.badge.supplementare { background-color: #ffa500; }
+.badge.ferie { background-color: #f2c5e7; }
+.badge.festivita { background-color: #f2adad; }
+.badge.scoperto { background-color: #fb4b4b}
+.arrow { font-size: 18px; transition: transform 0.2s; margin-left: 10px; }
+.month.open .arrow { transform: rotate(90deg); }
+@media (max-width: 700px) {  .day-row { grid-template-columns: 1fr; }}
+.day-row {  display: grid;  grid-template-columns: 120px 150px 1fr auto auto auto;  align-items: center;  gap: 10px;  padding: 6px;  border-bottom: 1px solid #eee;  border-radius: 6px;  transition: background 0.2s;  margin: 8px;}
+.day-row:last-child { border-bottom: none; }
+.day-row input { flex: 1}
+.day-row label.disabled {  color: #777;  opacity: 0.6;  cursor: not-allowed;}
+.day-row label.disabled input {  cursor: not-allowed;}
+.giorno {width:120px;}
+.presenze-header span { margin-right: 10px; }
+.day-row { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.badge { margin-left: 4px; }
+.month-content { margin-left: 20px; display: none; }
+.month.open .month-content { display: block; }
+.today { font-weight: bold; }
+.disabled { opacity: 0.6; pointer-events: none; }
