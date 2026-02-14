@@ -44,6 +44,7 @@ async function checkUser() {
         authSection.classList.add('hidden');
         appSection.classList.remove('hidden');
         userDisplay.innerText = user.email;
+        loadSubPageServizi();
     } else {
         authSection.classList.remove('hidden');
         appSection.classList.add('hidden');
@@ -72,7 +73,7 @@ document.getElementById('btnLogout').onclick = async () => {
 };
 
 // 5.Caricamento Dinamico pagina html
-async function loadSubPage() {
+async function loadSubPageServizi() {
     try {
         const response = await fetch('servizi.html');
         const html = await response.text();
