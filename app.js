@@ -53,7 +53,7 @@ document.getElementById('btnFetch').onclick = async () => {
 
 // 4. Logout
 document.getElementById('btnLogout').onclick = async () => {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     checkUser();
 };
 
