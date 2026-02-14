@@ -1,0 +1,88 @@
+:root {
+    --primary: #3ecf8e; /* Verde Supabase */
+    --primary-hover: #34b27b;
+    --bg: #121212;
+    --card-bg: #1e1e1e;
+    --text: #ffffff;
+    --input-border: #333333;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+#auth-section, #app-section {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 380px; /* Responsive: non supera i 380px */
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid #2e2e2e;
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    background: #000;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary);
+    color: #121212;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Messaggio di errore stilizzato */
+.error-msg {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
