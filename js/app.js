@@ -19,7 +19,20 @@ document.getElementById('btnLogin').onclick = async () => {
         password
     });
 
-    if (error) alert("Errore: " + error.message);
+    if (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Accesso negato',
+            text: 'Credenziali non valide. Riprova.',
+            confirmButtonColor: '#3ecf8e', // Il tuo verde Supabase
+            background: '#ffffff',
+            customClass: {
+                popup: 'my-swal-popup'
+            }
+        });
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
     else checkUser();
 };
 
