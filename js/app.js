@@ -64,11 +64,23 @@ document.getElementById('btnFetch').onclick = async () => {
     }
 };
 
+
 // 4. Logout
 document.getElementById('btnLogout').onclick = async () => {
     await supabaseClient.auth.signOut();
     checkUser();
 };
+
+// 5.Caricamento Dinamico pagina html
+async function loadSubPage() {
+    try {
+        const response = await fetch('servizi.html');
+        const html = await response.text();
+        document.getElementById('dynamic-content').innerHTML = html;
+    } catch (err) {
+        console.error("Errore nel caricamento della pagina:", err);
+    }
+}
 
 // Avvio: controlla se l'utente è già loggato
 checkUser();
