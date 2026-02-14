@@ -39,7 +39,7 @@ async function checkUser() {
 
 // 3. Recupero Dati Protetto (Dimostrazione RLS)
 document.getElementById('btnFetch').onclick = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('profili')
         .select('*'); // Non serve filtrare per ID! Il DB lo fa per te grazie alle RLS.
 
