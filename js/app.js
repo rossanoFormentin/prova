@@ -75,7 +75,7 @@ document.getElementById('btnLogout').onclick = async () => {
 // 5.Caricamento Dinamico pagina html
 async function loadSubPageServizi() {
     try {
-        const response = await fetch('servizi.html');
+        const response = await fetch('prova.html');
         const html = await response.text();
         document.getElementById('dynamic-content').innerHTML = html;
     } catch (err) {
