@@ -21,34 +21,41 @@ document.addEventListener("DOMContentLoaded", () => {
       generateCalendar();
     }
   });
-
-  // Imposta il mese corrente subito
-  if(monthPickerEl._flatpickr) monthPickerEl._flatpickr.setDate(today, true);
+  monthPickerEl._flatpickr.setDate(today, true);
 
   // ------------------- Pulsanti navigazione -------------------
   document.getElementById("prevMonth")?.addEventListener("click", () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
     generateCalendar();
-    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+    monthPickerEl._flatpickr.setDate(currentMonth, true);
   });
 
   document.getElementById("nextMonth")?.addEventListener("click", () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
     generateCalendar();
-    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+    monthPickerEl._flatpickr.setDate(currentMonth, true);
   });
 
   document.getElementById("actualMonth")?.addEventListener("click", () => {
     currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     generateCalendar();
-    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+    monthPickerEl._flatpickr.setDate(currentMonth, true);
   });
 
-  // ------------------- Genera calendario iniziale -------------------
-  generateCalendar();
+  // ------------------- Funzioni -------------------
+  function stripTime(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
 
-  // ------------------- Funzioni generali -------------------
-  async function generateCalendar() {
+  function formatDateLocal(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatDateDDMMYYYY(d) {
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
+
+  function generateCalendar() {
     const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const end = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
     const allDays = [];
@@ -58,14 +65,19 @@ document.addEventListener("DOMContentLoaded", () => {
       current.setDate(current.getDate()+1);
     }
 
-    let html = `<div class="month open"><div class="month-header"><h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2></div><div class="month-content">`;
+    const todayNoTime = stripTime(today);
+    let html = `<div class="month open" id="month-${currentMonth.getFullYear()}-${currentMonth.getMonth()}">
+                  <div class="month-header">
+                    <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
+                  </div>
+                  <div class="month-content">`;
+
     allDays.forEach(day=>{
-  		const dayStr = formatDateLocal(day);
-		const todayNoTime = stripTime(today);
-  		const dayNoTime = stripTime(day);
-  		const isPast = dayNoTime < todayNoTime;
-      
-		html += `<div class="day-row ${isPast?"disabled":""}" id="row-${dayStr}">
+      const dayStr = formatDateLocal(day);
+      const dayNoTime = stripTime(day);
+      const isPast = dayNoTime < todayNoTime;
+
+      html += `<div class="day-row ${isPast?"disabled":""}" id="row-${dayStr}">
                 <div>${formatDateDDMMYYYY(day)}</div>
                 <select id="status-${dayStr}" ${isPast?"disabled":""} onchange="onChangeDay('${dayStr}')">
                   <option value="">--</option>
@@ -78,388 +90,163 @@ document.addEventListener("DOMContentLoaded", () => {
                 </select>
               </div>`;
     });
+
     html += `</div></div>`;
     calendarDiv.innerHTML = html;
+
+    // Dopo rigenerazione, ricarico dati e badge
+    loadDays();
+    updateAllBadges();
+    aggiornaMenu();
   }
 
-  function formatDateLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-  function formatDateDDMMYYYY(d){ return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
-});
+  // ------------------- Load dati -------------------
+  async function loadDays(){
+    const {data,error} = await supabaseClient.from("work_days").select("*");
+    if(error){ console.error(error); return; }
 
-// ------------------- Funzione comune per cambiare mese -------------------
-function changeMonth(newMonth) {
-  currentMonth = newMonth;
-  generateCalendar();
-  // Aggiorna Flatpickr se il cambiamento viene da pulsanti
-  document.querySelector("#monthPicker")._flatpickr.setDate(currentMonth, true);
-}
+    data.forEach(row=>{
+      const {date,status,note,giustificativo} = row;
+      const statusSelect = document.getElementById(`status-${date}`);
+      const rowDiv = document.getElementById(`row-${date}`);
+      const giustBox = document.getElementById(`giust-${date}`);
 
-// ------------------- Eventi pulsanti -------------------
-document.getElementById("prevMonth").addEventListener("click", () => {
-  const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
-  changeMonth(prev);
-});
+      if(statusSelect) statusSelect.value = status;
+      if(rowDiv && status) rowDiv.classList.add(status);
+      if(giustBox) giustBox.checked = giustificativo || false;
 
-document.getElementById("nextMonth").addEventListener("click", () => {
-  const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
-  changeMonth(next);
-});
+      initialValues[`status-${date}`] = status;
+      initialValues[`note-${date}`] = note || "";
+      initialValues[`giust-${date}`] = giustificativo || false;
 
-document.getElementById("actualMonth").addEventListener("click", () => {
-  changeMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-});
-
-// ------------------- Flatpickr -------------------
-flatpickr("#monthPicker", {
-  plugins: [new monthSelectPlugin({
-    shorthand: true,
-    dateFormat: "Y-m",
-    altFormat: "F Y"
-  })],
-  defaultDate: today,
-  onChange: function(selectedDates, dateStr){
-    if(!dateStr) return;
-    const [year, month] = dateStr.split("-").map(Number);
-    const newMonth = new Date(year, month-1, 1);
-    changeMonth(newMonth);
+      updateGiustificativo(date);
+    });
   }
-});
 
-// Imposta il picker al mese corrente subito dopo l’inizializzazione
-document.querySelector("#monthPicker")._flatpickr.setDate(today, true);
-
-// ------------------- Avvio -------------------
-generateCalendar();
-
-
-// Caricamento dati
-async function loadDays(){
-  const {data,error}=await supabaseClient.from("work_days").select("*");
-  if(error){ console.error(error); return; }
-  data.forEach(row=>{
-    const {date,status,note,giustificativo}=row;
-    const statusSelect=document.getElementById(`status-${date}`);
-    const noteField=document.getElementById(`note-${date}`);
-    const rowDiv=document.getElementById(`row-${date}`);
-    const giustBox=document.getElementById(`giust-${date}`);
-    const giustLabel=document.getElementById(`label-giust-${date}`);
-
-    if(statusSelect) statusSelect.value=status;
-    if(noteField) noteField.value=note||"";
-    if(rowDiv && status) rowDiv.classList.add(status);
-    if(giustBox) giustBox.checked=giustificativo||false;
-
-    initialValues[`status-${date}`]=status;
-    initialValues[`note-${date}`]=note||"";
-    initialValues[`giust-${date}`]=giustificativo||false;
-	
-	// **Aggiorna lo stato del checkbox anche al caricamento**
-    updateGiustificativo(date);
-	
-  });
-}
-
-// Gestione modifiche
-function markUnsaved(dayStr){
-  const statusSelect = document.getElementById(`status-${dayStr}`);
-  const noteField = document.getElementById(`note-${dayStr}`);
-  const giustBox = document.getElementById(`giust-${dayStr}`);
-  const row = document.getElementById(`row-${dayStr}`);
-
-  const changed = (statusSelect.value !== initialValues[`status-${dayStr}`]) ||
-                  (noteField.value !== initialValues[`note-${dayStr}`]) ||
-                  (giustBox && giustBox.checked !== initialValues[`giust-${dayStr}`]);
-  if(changed) row.classList.add("unsaved");
-  else row.classList.remove("unsaved");
-}
-
-window.onChangeDay = function(dayStr){
-  markUnsaved(dayStr);
-  updateGiustificativo(dayStr);
-  updateColor(dayStr);
-  updateMonthBadge(dayStr);
-  aggiornaMenu(); // Aggiorna menu live
-  
-};
-
-
-window.saveDay = async function(dayStr){
-  const status = document.getElementById(`status-${dayStr}`).value;
-  const note = document.getElementById(`note-${dayStr}`).value;
-  const giust = document.getElementById(`giust-${dayStr}`)?.checked || false;
-
-  if(status === ""){
-    // Se non c'è status, elimina eventuale record esistente
-    await supabaseClient.from("work_days").delete().eq("date", dayStr);
-    document.getElementById(`row-${dayStr}`).classList.remove("unsaved");
+  // ------------------- Gestione modifiche -------------------
+  window.onChangeDay = function(dayStr){
+    markUnsaved(dayStr);
+    updateGiustificativo(dayStr);
+    updateColor(dayStr);
     updateMonthBadge(dayStr);
     aggiornaMenu();
-    return;
   }
 
-  const {data: existing} = await supabaseClient.from("work_days").select("*").eq("date", dayStr).maybeSingle();
+  function markUnsaved(dayStr){
+    const statusSelect = document.getElementById(`status-${dayStr}`);
+    const row = document.getElementById(`row-${dayStr}`);
+    if(!row || !statusSelect) return;
 
-  if(status === "smart" && !canAddSmart(dayStr)){
-    alert("Hai già raggiunto 10 giorni di Smart Working per questo mese.");
-    document.getElementById(`status-${dayStr}`).value = "";
-    return;
+    const changed = statusSelect.value !== initialValues[`status-${dayStr}`];
+    if(changed) row.classList.add("unsaved");
+    else row.classList.remove("unsaved");
   }
 
-  if(existing){
-    await supabaseClient.from("work_days").update({status,note,giustificativo:giust}).eq("date", dayStr);
-  } else {
-    await supabaseClient.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
+  window.updateColor = function(dayStr){
+    const status = document.getElementById(`status-${dayStr}`)?.value;
+    const row = document.getElementById(`row-${dayStr}`);
+    if(!row) return;
+    row.classList.remove("smart","presenza","supplementare","ferie","festivita","scoperto");
+    if(status) row.classList.add(status);
   }
 
-  initialValues[`status-${dayStr}`] = status;
-  initialValues[`note-${dayStr}`] = note;
-  initialValues[`giust-${dayStr}`] = giust;
+  function updateGiustificativo(dayStr){
+    const statusSelect = document.getElementById(`status-${dayStr}`);
+    const giustBox = document.getElementById(`giust-${dayStr}`);
+    const rowDiv = document.getElementById(`row-${dayStr}`);
+    if(!statusSelect || !giustBox || !rowDiv) return;
 
-  document.getElementById(`row-${dayStr}`).classList.remove("unsaved");
-  updateColor(dayStr);
-  updateMonthBadge(dayStr);
-  aggiornaMenu();
-};
-
-function canAddSmart(dayStr){
-  const date = new Date(dayStr);
-  const monthDiv = document.getElementById(`month-${date.getFullYear()}-${date.getMonth()}`);
-  if(!monthDiv) return true;
-  const rows = monthDiv.querySelectorAll(".day-row select");
-  let count = 0;
-  rows.forEach(sel => { if(sel.value === "smart") count++; });
-  return count <= 10; // <=10 perché il nuovo giorno sarà il 10° consentito
-}
-
-
-// Cancellazione
-window.deleteDay=async function(dayStr){
-  const statusSelect = document.getElementById(`status-${dayStr}`);
-  const noteField = document.getElementById(`note-${dayStr}`);
-  const giustBox = document.getElementById(`giust-${dayStr}`);
-  const row = document.getElementById(`row-${dayStr}`);
-  if(!row) return;
-
-  statusSelect.value = initialValues[`status-${dayStr}`] || "";
-  noteField.value = initialValues[`note-${dayStr}`] || "";
-  if(giustBox) giustBox.checked = initialValues[`giust-${dayStr}`] || false;
-
-  updateColor(dayStr);
-  updateGiustificativo(dayStr);
-  row.classList.remove("unsaved");
-
-  await supabaseClient.from("work_days").delete().eq("date",dayStr);
-  updateMonthBadge(dayStr);
-  aggiornaMenu(); // Aggiorna menu live
-};
-
-// Aggiorna colore riga
-window.updateColor=function(dayStr){
-  const status = document.getElementById(`status-${dayStr}`).value;
-  const row = document.getElementById(`row-${dayStr}`);
-  row.classList.remove("smart","presenza","supplementare","ferie","festivita","scoperto");
-  if(status) row.classList.add(status);
-};
-
-// Controllo giustificativo
-function updateGiustificativo(dayStr){
-  const statusSelect = document.getElementById(`status-${dayStr}`);
-  const giustBox = document.getElementById(`giust-${dayStr}`);
-  const giustLabel = document.getElementById(`label-giust-${dayStr}`);
-  const rowDiv = document.getElementById(`row-${dayStr}`);
-  if(!statusSelect || !giustBox || !giustLabel || !rowDiv) return;
-
-  const isPast = rowDiv.classList.contains("disabled");
-  const disable = isPast || statusSelect.value==="presenza" || statusSelect.value==="festivita" || statusSelect.value==="scoperto" || statusSelect.value==="";
-  giustBox.disabled = disable;
-  if(disable) giustBox.checked=false;
-}
-
-// Toggle mese
-window.toggleMonth=function(id){
-  const monthDiv=document.getElementById(id);
-  monthDiv.classList.toggle("open");
-};
-
-// Aggiornamento badge mese
-function updateMonthBadge(dayStr){
-  const date = new Date(dayStr);
-  const monthDiv = document.getElementById(`month-${date.getFullYear()}-${date.getMonth()}`);
-  const badges = monthDiv.querySelectorAll(".badge");
-  const rows = monthDiv.querySelectorAll(".day-row select");
-  const counts={smart:0,presenza:0,supplementare:0,ferie:0,festivita:0,scoperto:0};
-  rows.forEach(sel=>{ if(sel.value && counts[sel.value]!==undefined) counts[sel.value]++; });
-  badges.forEach(b=>{ if(b.classList.contains("smart")) b.textContent=counts.smart;
-                     if(b.classList.contains("presenza")) b.textContent=counts.presenza;
-                     if(b.classList.contains("supplementare")) b.textContent=counts.supplementare;
-                     if(b.classList.contains("ferie")) b.textContent=counts.ferie; 
-					  if(b.classList.contains("festivita")) b.textContent=counts.festivita; 
-					  if(b.classList.contains("scoperto")) b.textContent=counts.scoperto; 
-					 
-					 });
-}
-
-function updateAllBadges(){
-  const monthDivs = document.querySelectorAll(".month");
-  monthDivs.forEach(mDiv=>{
-    const rows = mDiv.querySelectorAll(".day-row select");
-    const badges = mDiv.querySelectorAll(".badge");
-    const counts={smart:0,presenza:0,supplementare:0,ferie:0,festivita:0,scoperto:0};
-    rows.forEach(sel=>{ if(sel.value && counts[sel.value]!==undefined) counts[sel.value]++; });
-    badges.forEach(b=>{ if(b.classList.contains("smart")) b.textContent=counts.smart;
-                       if(b.classList.contains("presenza")) b.textContent=counts.presenza;
-                       if(b.classList.contains("supplementare")) b.textContent=counts.supplementare;
-                       if(b.classList.contains("ferie")) b.textContent=counts.ferie; 
-					   if(b.classList.contains("festivita")) b.textContent=counts.festivita; 
-					   if(b.classList.contains("scoperto")) b.textContent=counts.scoperto; 
-					   });
-  });
-}
-
-// ================= MENU LIVE ===================
-
-// Trova il prossimo giorno lavorativo (esclude sabato, domenica e festività)
-function getNextWorkingDay(date) {
-  const next = new Date(date);
-  do {
-    next.setDate(next.getDate() + 1);
-  } while (next.getDay() === 0 || next.getDay() === 6); // 0 = domenica, 6 = sabato
-  return next;
-}
-
-async function aggiornaMenu() {
-  const today = new Date();
-  const todayStr = formatDateLocal(today);
-
-  // 🔹 Trova il prossimo giorno lavorativo
-  const nextDay = getNextWorkingDay(today);
-  const nextDayStr = formatDateLocal(nextDay);
-
-  try {
-    // Recupera SOLO i record di oggi e del prossimo giorno lavorativo
-    const { data, error } = await supabaseClient
-      .from("work_days")
-      .select("date, status, giustificativo")
-      .in("date", [todayStr, nextDayStr]);
-
-    if (error) throw error;
-
-    // Mappa i risultati per data
-    const map = {};
-    data.forEach(r => { map[r.date] = r; });
-
-    // --- OGGI ---
-    const statusOggi = map[todayStr]?.status || "";
-    const giustOggi = map[todayStr]?.giustificativo || false;
-    document.getElementById("presenzeOggi").innerHTML = generaBadge(statusOggi, giustOggi, "oggi");
-
-    // --- PROSSIMO GIORNO LAVORATIVO ---
-    const statusNext = map[nextDayStr]?.status || "";
-    const giustNext = map[nextDayStr]?.giustificativo || false;
-
-    // Mostra anche la data del giorno lavorativo successivo (es. "martedì 22/10")
-    const nextLabel = `Prossimo giorno lavorativo: ${nextDay.toLocaleDateString("it-IT", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}`;
-	document.getElementById("presenzeProssimoGiornoLavorativo").innerHTML = generaBadge(statusNext, giustNext, nextLabel);
-
-  } catch (err) {
-    console.error("Errore in aggiornaMenu:", err);
-    document.getElementById("presenzeOggi").innerHTML = "oggi: <span class='badge bg-danger'>Nessuna presenza per oggi</span>";
-    document.getElementById("presenzeProssimoGiornoLavorativo").innerHTML = "Prossimo giorno lavorativo: <span class='badge bg-danger'>Nessuna presenza per il prossimo giorno lavorativo</span>";
+    const isPast = rowDiv.classList.contains("disabled");
+    const disable = isPast || ["presenza","festivita","scoperto",""].includes(statusSelect.value);
+    giustBox.disabled = disable;
+    if(disable) giustBox.checked = false;
   }
-}
 
+  function updateMonthBadge(dayStr){
+    const date = new Date(dayStr);
+    const monthDiv = document.getElementById(`month-${date.getFullYear()}-${date.getMonth()}`);
+    if(!monthDiv) return;
 
-function generaBadge(status, giust, label) {
+    const badges = monthDiv.querySelectorAll(".badge");
+    const rows = monthDiv.querySelectorAll(".day-row select");
+    const counts = {smart:0,presenza:0,supplementare:0,ferie:0,festivita:0,scoperto:0};
 
+    rows.forEach(sel=>{
+      if(sel.value && counts[sel.value] !== undefined) counts[sel.value]++;
+    });
 
+    badges.forEach(b=>{
+      if(counts[b.className.split(" ")[1]] !== undefined) b.textContent = counts[b.className.split(" ")[1]];
+    });
+  }
 
-    if(!status) return `${label}: <span class="fw-bold badge bg-danger"">Presenza da dichiarare</span>`;
-    let statoText="";
-    if(status==="smart") statoText="Smart working";
-    else if(status==="supplementare") statoText="Smart working supplementare";
-    else if(status==="presenza") statoText="In sede";
-    else if(status==="ferie") statoText="Ferie";
-	else if(status==="festivita") statoText="Festività";
-	else if(status==="scoperto") statoText="Giorno scoperto da smart";
+  function updateAllBadges(){
+    const monthDivs = document.querySelectorAll(".month");
+    monthDivs.forEach(mDiv=>{
+      const rows = mDiv.querySelectorAll(".day-row select");
+      const badges = mDiv.querySelectorAll(".badge");
+      const counts = {smart:0,presenza:0,supplementare:0,ferie:0,festivita:0,scoperto:0};
+      rows.forEach(sel=>{ if(sel.value && counts[sel.value]!==undefined) counts[sel.value]++; });
+      badges.forEach(b=>{
+        if(counts[b.className.split(" ")[1]] !== undefined) b.textContent = counts[b.className.split(" ")[1]];
+      });
+    });
+  }
 
-    let giustText="";
-    if((status==="smart"||status==="supplementare") && giust) giustText=`<span class="fw-bold badge bg-success">Giustificativo richiesto</span>`;
-    if((status==="smart"||status==="supplementare") && !giust) giustText=`<span class="fw-bold badge bg-danger">Richiedere giustificativo</span>`;
+  // ------------------- Menu Live -------------------
+  function getNextWorkingDay(date) {
+    const next = new Date(date);
+    do {
+      next.setDate(next.getDate() + 1);
+    } while([0,6].includes(next.getDay()));
+    return next;
+  }
 
-    return `${label} <span class="fw-bold badge bg-primary me-1">${statoText}</span>${giustText}`;
-}
+  async function aggiornaMenu() {
+    const todayStr = formatDateLocal(today);
+    const nextDay = getNextWorkingDay(today);
+    const nextDayStr = formatDateLocal(nextDay);
 
-// PULSANTI NAVIGAZIONE
-document.getElementById("prevMonth").addEventListener("click", () => {
-  currentMonth.setMonth(currentMonth.getMonth() - 1);
-  generateCalendar();
-});
+    try {
+      const { data, error } = await supabaseClient
+        .from("work_days")
+        .select("date, status, giustificativo")
+        .in("date", [todayStr, nextDayStr]);
+      if(error) throw error;
 
-document.getElementById("nextMonth").addEventListener("click", () => {
-  currentMonth.setMonth(currentMonth.getMonth() + 1);
-  generateCalendar();
-});
+      const map = {};
+      data.forEach(r => map[r.date] = r);
 
-document.getElementById("actualMonth").addEventListener("click", () => {
-  // Imposta currentMonth al mese e anno di oggi
-  currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  generateCalendar(); // rigenera il calendario
-});
+      const statusOggi = map[todayStr]?.status || "";
+      const giustOggi = map[todayStr]?.giustificativo || false;
+      document.getElementById("presenzeOggi").innerHTML = generaBadge(statusOggi, giustOggi, "oggi");
 
-// Gestione scelta mese dal selettore
-document.getElementById("monthPicker").addEventListener("change", (e) => {
-  const [year, month] = e.target.value.split("-").map(Number);
-  currentMonth = new Date(year, month - 1, 1);
-  generateCalendar();
-});
-
-// Inizializza il selettore mese con Flatpickr
-  flatpickr("#monthPicker", {
-    plugins: [
-      new monthSelectPlugin({
-        shorthand: true,      // Mesi abbreviati
-        dateFormat: "Y-m",    // Formato interno: 2025-10
-        altFormat: "F Y"      // Visualizzazione: Ottobre 2025
-      })
-    ],
-    defaultDate: new Date(),
-    onChange: function(selectedDates, dateStr) {
-      if(!dateStr) return;
-      const [year, month] = dateStr.split("-").map(Number);
-      currentMonth = new Date(year, month - 1, 1);
-      generateCalendar();
-    }
-  });
-  
-
-function getConsuntivazioneDate(date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const lastDay = new Date(year, month + 1, 0);
-
-  let workingDaysCount = 0;
-  let checkDate = new Date(lastDay);
-
-  while (workingDaysCount < 2) {
-    checkDate.setDate(checkDate.getDate() - 1);
-    const day = checkDate.getDay(); // 0=Dom, 6=Sab
-    if (day !== 0 && day !== 6) {
-      workingDaysCount++;
+      const statusNext = map[nextDayStr]?.status || "";
+      const giustNext = map[nextDayStr]?.giustificativo || false;
+      const nextLabel = `Prossimo giorno lavorativo: ${nextDay.toLocaleDateString("it-IT", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}`;
+      document.getElementById("presenzeProssimoGiornoLavorativo").innerHTML = generaBadge(statusNext, giustNext, nextLabel);
+    } catch(err){
+      console.error(err);
     }
   }
 
-  return checkDate;
-}
+  function generaBadge(status, giust, label){
+    if(!status) return `${label}: <span class="fw-bold badge bg-danger">Presenza da dichiarare</span>`;
+    const texts = {
+      smart:"Smart working",
+      supplementare:"Smart working supplementare",
+      presenza:"In sede",
+      ferie:"Ferie",
+      festivita:"Festività",
+      scoperto:"Giorno scoperto da smart"
+    };
+    let giustText = "";
+    if(["smart","supplementare"].includes(status)) giustText = giust
+      ? `<span class="fw-bold badge bg-success">Giustificativo richiesto</span>`
+      : `<span class="fw-bold badge bg-danger">Richiedere giustificativo</span>`;
+    return `${label} <span class="fw-bold badge bg-primary me-1">${texts[status]}</span>${giustText}`;
+  }
 
-function sameDay(d1, d2) {
-  return d1.toDateString() === d2.toDateString();
-}
-
-function meseCorrente() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function stripTime(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+  // ------------------- Avvio -------------------
+  generateCalendar();
+});
