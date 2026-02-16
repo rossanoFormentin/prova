@@ -24,19 +24,29 @@
 
     <div id="app-section" class="hidden">
 
-    <div class="app-header">
+    <!-- Header -->
+    <header class="app-header">
         <div>
             <h2>Area Riservata</h2>
             <p>Benvenuto: <b id="user-display"></b></p>
         </div>
-
         <button id="btnLogout">Esci</button>
+    </header>
+
+    <div class="app-body">
+        <!-- Sidebar -->
+        <nav class="app-sidebar">
+            <ul>
+                <li><button onclick="loadSubPageServizi()">Servizi</button></li>
+                <li><button onclick="loadSubPageAltro()">Altro</button></li>
+            </ul>
+        </nav>
+
+        <!-- Contenuto dinamico -->
+        <main class="app-content" id="dynamic-content">
+            <!-- Qui viene caricata la pagina via fetch -->
+        </main>
     </div>
-
-    <hr>
-
-    <div id="dynamic-content"></div>
-
 </div>
 
     
@@ -46,6 +56,7 @@
 </body>
 
 </html>
+
 
 
 
