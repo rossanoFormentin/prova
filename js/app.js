@@ -44,10 +44,14 @@ async function checkUser() {
         authSection.classList.add('hidden');
         appSection.classList.remove('hidden');
         userDisplay.innerText = user.email;
+
+        document.body.classList.remove("auth-layout");
+
         loadSubPageServizi();
     } else {
         authSection.classList.remove('hidden');
         appSection.classList.add('hidden');
+        document.body.classList.add("auth-layout");
     }
 }
 
