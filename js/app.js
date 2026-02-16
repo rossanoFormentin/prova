@@ -61,20 +61,6 @@ async function checkUser() {
         document.body.classList.add("auth-layout");
     }
 }
-// 3. Recupero Dati Protetto (Dimostrazione RLS)
-/*document.getElementById('btnFetch').onclick = async () => {
-    const { data, error } = await supabaseClient
-        .from('profili')
-        .select('*'); // Non serve filtrare per ID! Il DB lo fa per te grazie alle RLS.
-
-    if (error) {
-        console.error(error);
-    } else {
-        document.getElementById('db-content').innerHTML = 
-            `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-    }
-};*/
-
 
 // 4. Logout
 document.getElementById('btnLogout').onclick = async () => {
@@ -123,4 +109,28 @@ document.querySelectorAll('.app-sidebar button').forEach(btn => {
         loadPage(page);
     });
 });
+
+window.loadSubPageServizi = function() {
+  const content = document.getElementById("dynamic-content");
+
+  // Inserisce il contenuto del calendario
+  content.innerHTML = `
+    <h3>Calendario Presenze</h3>
+    <div id="calendar-container">
+      <input type="text" id="monthPicker" class="form-control mb-3" placeholder="Seleziona mese">
+      <div id="calendar"></div>
+    </div>
+  `;
+
+  // Carica dinamicamente il file prova.js
+  const script = document.createElement("script");
+  script.src = "js/prova.js";
+  script.onload = () => console.log("prova.js caricato correttamente");
+  content.appendChild(script);
+};
+
+window.loadSubPageAltro = function() {
+  const content = document.getElementById("dynamic-content");
+  content.innerHTML = `<h3>Altro</h3><p>Contenuto extra...</p>`;
+};
 
