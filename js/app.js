@@ -45,16 +45,18 @@ async function checkUser() {
         appSection.classList.remove('hidden');
         userDisplay.innerText = user.email;
 
+        // ✅ fullscreen app
         document.body.classList.remove("auth-layout");
 
         loadSubPageServizi();
     } else {
         authSection.classList.remove('hidden');
         appSection.classList.add('hidden');
+
+        // ✅ login centrata
         document.body.classList.add("auth-layout");
     }
 }
-
 // 3. Recupero Dati Protetto (Dimostrazione RLS)
 /*document.getElementById('btnFetch').onclick = async () => {
     const { data, error } = await supabaseClient
