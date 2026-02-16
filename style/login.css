@@ -107,3 +107,21 @@ button:active {
 .hidden {
     display: none !important;
 }
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+}
+
+.app-header h2 {
+    margin: 0;
+}
+
+.app-header p {
+    margin: 2px 0 0 0;
+    color: var(--text-muted);
+}
+
+
