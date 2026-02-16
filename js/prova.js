@@ -60,9 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = `<div class="month open"><div class="month-header"><h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2></div><div class="month-content">`;
     allDays.forEach(day=>{
-      const dayStr = formatDateLocal(day);
-      const isPast = day < today;
-      html += `<div class="day-row ${isPast?"disabled":""}" id="row-${dayStr}">
+  		const dayStr = formatDateLocal(day);
+		const todayNoTime = stripTime(today);
+  		const dayNoTime = stripTime(day);
+  		const isPast = dayNoTime < todayNoTime;
+      
+		html += `<div class="day-row ${isPast?"disabled":""}" id="row-${dayStr}">
                 <div>${formatDateDDMMYYYY(day)}</div>
                 <select id="status-${dayStr}" ${isPast?"disabled":""} onchange="onChangeDay('${dayStr}')">
                   <option value="">--</option>
@@ -455,4 +458,8 @@ function sameDay(d1, d2) {
 function meseCorrente() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function stripTime(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
