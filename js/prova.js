@@ -5,13 +5,14 @@ const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio"
 const calendarDiv = document.getElementById("calendar");
 const initialValues = {};
 
-// Formattazione date
+// ------------------- Funzioni di formattazione -------------------
 function formatDateLocal(d){
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth()+1).padStart(2,'0');
   const dd = String(d.getDate()).padStart(2,'0');
   return `${yyyy}-${mm}-${dd}`;
 }
+
 function formatDateDDMMYYYY(d){
   const dd = String(d.getDate()).padStart(2,'0');
   const mm = String(d.getMonth()+1).padStart(2,'0');
@@ -19,29 +20,8 @@ function formatDateDDMMYYYY(d){
   return `${dd}/${mm}/${yyyy}`;
 }
 
-// ------------------- Flatpickr mese -------------------
-flatpickr("#monthPicker", {
-  plugins: [new monthSelectPlugin({
-    shorthand: true,
-    dateFormat: "Y-m",
-    altFormat: "F Y"
-  })],
-  defaultDate: today,
-  onChange: function(selectedDates, dateStr){
-    if(!dateStr) return;
-    const [year, month] = dateStr.split("-").map(Number);
-    currentMonth = new Date(year, month-1, 1);
-    generateCalendar();
-  }
-});
-
-// Imposta il picker al mese corrente (solo dopo Flatpickr)
-document.querySelector("#monthPicker")._flatpickr.setDate(today);
-
-// ------------------- Generazione calendario -------------------
-generateCalendar();
-
-async function generateCalendar(){
+// ------------------- Funzioni calendario -------------------
+async function generateCalendar() {
   const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const end   = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
 
@@ -53,18 +33,19 @@ async function generateCalendar(){
   }
 
   const key = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
-  let html = `<div class="month open" id="month-${key}">`;
-  html += `<div class="month-header">
-             <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
-             <div class="badges-container">
-               <span class="badge smart">0</span>
-               <span class="badge supplementare">0</span>
-               <span class="badge presenza">0</span>
-               <span class="badge ferie">0</span>
-               <span class="badge festivita">0</span>
-               <span class="badge scoperto">0</span>
-             </div>
-           </div><div class="month-content">`;
+  let html = `<div class="month open" id="month-${key}">
+                <div class="month-header">
+                  <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
+                  <div class="badges-container">
+                    <span class="badge smart">0</span>
+                    <span class="badge supplementare">0</span>
+                    <span class="badge presenza">0</span>
+                    <span class="badge ferie">0</span>
+                    <span class="badge festivita">0</span>
+                    <span class="badge scoperto">0</span>
+                  </div>
+                </div>
+                <div class="month-content">`;
 
   allDays.forEach(day=>{
     const dayStr = formatDateLocal(day);
@@ -101,7 +82,51 @@ async function generateCalendar(){
   document.getElementById("calendarTitle").textContent = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
 }
 
-// ... resto del codice rimane invariato ...
+// ------------------- Funzione comune per cambiare mese -------------------
+function changeMonth(newMonth) {
+  currentMonth = newMonth;
+  generateCalendar();
+  // Aggiorna Flatpickr se il cambiamento viene da pulsanti
+  document.querySelector("#monthPicker")._flatpickr.setDate(currentMonth, true);
+}
+
+// ------------------- Eventi pulsanti -------------------
+document.getElementById("prevMonth").addEventListener("click", () => {
+  const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+  changeMonth(prev);
+});
+
+document.getElementById("nextMonth").addEventListener("click", () => {
+  const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+  changeMonth(next);
+});
+
+document.getElementById("actualMonth").addEventListener("click", () => {
+  changeMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+});
+
+// ------------------- Flatpickr -------------------
+flatpickr("#monthPicker", {
+  plugins: [new monthSelectPlugin({
+    shorthand: true,
+    dateFormat: "Y-m",
+    altFormat: "F Y"
+  })],
+  defaultDate: today,
+  onChange: function(selectedDates, dateStr){
+    if(!dateStr) return;
+    const [year, month] = dateStr.split("-").map(Number);
+    const newMonth = new Date(year, month-1, 1);
+    changeMonth(newMonth);
+  }
+});
+
+// Imposta il picker al mese corrente subito dopo l’inizializzazione
+document.querySelector("#monthPicker")._flatpickr.setDate(today, true);
+
+// ------------------- Avvio -------------------
+generateCalendar();
+
 
 // Caricamento dati
 async function loadDays(){
@@ -153,30 +178,6 @@ window.onChangeDay = function(dayStr){
   
 };
 
-// Salvataggio
-/*window.saveDay=async function(dayStr){
-  const status=document.getElementById(`status-${dayStr}`).value;
-  const note=document.getElementById(`note-${dayStr}`).value;
-  const giust=document.getElementById(`giust-${dayStr}`)?.checked || false;
-
-  const {data:existing}=await supabaseClient.from("work_days").select("*").eq("date",dayStr).maybeSingle();
-
-  if(existing){
-    await supabaseClient.from("work_days").update({status,note,giustificativo:giust}).eq("date",dayStr);
-  } else {
-    await supabaseClient.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
-  }
-
-  initialValues[`status-${dayStr}`]=status;
-  initialValues[`note-${dayStr}`]=note;
-  initialValues[`giust-${dayStr}`]=giust;
-
-  document.getElementById(`row-${dayStr}`).classList.remove("unsaved");
-  updateColor(dayStr);
-  updateMonthBadge(dayStr);
-  aggiornaMenu(); // Aggiorna menu live
-};
-*/
 
 window.saveDay = async function(dayStr){
   const status = document.getElementById(`status-${dayStr}`).value;
