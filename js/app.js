@@ -4,6 +4,12 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Mini router: carica pagine dinamiche nella app-content
+const routes = {
+    servizi: 'prova.html',      // pagina servizi
+    altro: 'altro.html',        // altra pagina
+};
+
 // Selettori DOM
 const authSection = document.getElementById('auth-section');
 const appSection = document.getElementById('app-section');
@@ -44,16 +50,14 @@ async function checkUser() {
         authSection.classList.add('hidden');
         appSection.classList.remove('hidden');
         userDisplay.innerText = user.email;
-
-        // ✅ fullscreen app
+    
         document.body.classList.remove("auth-layout");
-
-        loadSubPageServizi();
+    
+        loadPage('servizi'); // carica la home page servizi di default
     } else {
         authSection.classList.remove('hidden');
         appSection.classList.add('hidden');
-
-        // ✅ login centrata
+    
         document.body.classList.add("auth-layout");
     }
 }
@@ -91,3 +95,32 @@ async function loadSubPageServizi() {
 
 // Avvio: controlla se l'utente è già loggato
 checkUser();
+
+
+
+// Funzione generica per caricare qualsiasi pagina
+async function loadPage(page) {
+    const url = routes[page];
+    if (!url) {
+        document.getElementById('dynamic-content').innerHTML = `<p>Pagina non trovata: ${page}</p>`;
+        return;
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        document.getElementById('dynamic-content').innerHTML = html;
+    } catch (err) {
+        console.error("Errore nel caricamento della pagina:", err);
+        document.getElementById('dynamic-content').innerHTML = `<p>Errore nel caricamento della pagina.</p>`;
+    }
+}
+
+// Listener pulsanti sidebar
+document.querySelectorAll('.app-sidebar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        loadPage(page);
+    });
+});
+
