@@ -20,7 +20,7 @@ body {
     margin: 0;
 }
 
-#auth-section, #app-section {
+#auth-section {
     background: var(--bg-card);
     padding: 2.5rem;
     border-radius: 16px;
