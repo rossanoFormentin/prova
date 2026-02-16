@@ -16,7 +16,7 @@ body {
     margin: 0;
 }
 
-/* SOLO LOGIN */
+/* SOLO schermata login */
 body.auth-layout {
     display: flex;
     justify-content: center;
