@@ -13,11 +13,15 @@ body {
     font-family: 'Inter', -apple-system, sans-serif;
     background-color: var(--bg-page);
     color: var(--text-main);
+    margin: 0;
+}
+
+/* SOLO LOGIN */
+body.auth-layout {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    margin: 0;
 }
 
 #auth-section {
