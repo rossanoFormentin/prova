@@ -1,9 +1,5 @@
 const today = new Date();
-
-// Imposta il selettore al mese corrente
-document.getElementById("monthPicker").value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-
-let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1); 
+let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
 const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 const calendarDiv = document.getElementById("calendar");
@@ -23,31 +19,51 @@ function formatDateDDMMYYYY(d){
   return `${dd}/${mm}/${yyyy}`;
 }
 
-// Generazione calendario
+// ------------------- Flatpickr mese -------------------
+flatpickr("#monthPicker", {
+  plugins: [new monthSelectPlugin({
+    shorthand: true,
+    dateFormat: "Y-m",
+    altFormat: "F Y"
+  })],
+  defaultDate: today,
+  onChange: function(selectedDates, dateStr){
+    if(!dateStr) return;
+    const [year, month] = dateStr.split("-").map(Number);
+    currentMonth = new Date(year, month-1, 1);
+    generateCalendar();
+  }
+});
+
+// Imposta il picker al mese corrente (solo dopo Flatpickr)
+document.querySelector("#monthPicker")._flatpickr.setDate(today);
+
+// ------------------- Generazione calendario -------------------
 generateCalendar();
+
 async function generateCalendar(){
-  let start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  let end = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
+  const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const end   = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
 
   const allDays = [];
   let current = new Date(start);
   while(current <= end){
-    if(current.getDay()!==0 && current.getDay()!==6) allDays.push(new Date(current));
-    current.setDate(current.getDate()+1);
+    if(current.getDay() !== 0 && current.getDay() !== 6) allDays.push(new Date(current));
+    current.setDate(current.getDate() + 1);
   }
 
   const key = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
   let html = `<div class="month open" id="month-${key}">`;
   html += `<div class="month-header">
-              <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
-              <div class="badges-container">
-                <span class="badge smart" title="Smart Working">0</span>
-                <span class="badge supplementare" title="Smart Working Supplementare">0</span>
-                <span class="badge presenza" title="Presenza">0</span>
-                <span class="badge ferie" title="Ferie">0</span>
-                <span class="badge festivita" title="Festività">0</span>
-                <span class="badge scoperto" title="Scoperto">0</span>
-              </div>
+             <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
+             <div class="badges-container">
+               <span class="badge smart">0</span>
+               <span class="badge supplementare">0</span>
+               <span class="badge presenza">0</span>
+               <span class="badge ferie">0</span>
+               <span class="badge festivita">0</span>
+               <span class="badge scoperto">0</span>
+             </div>
            </div><div class="month-content">`;
 
   allDays.forEach(day=>{
@@ -56,10 +72,10 @@ async function generateCalendar(){
     const isToday = dayStr === formatDateLocal(today);
     const isPast = day < today && !isToday;
 
-    html+=`
-      <div class="day-row ${isToday ? "today" : ""} ${isPast ? "disabled" : ""}" id="row-${dayStr}">
+    html += `
+      <div class="day-row ${isToday?"today":""} ${isPast?"disabled":""}" id="row-${dayStr}">
         <div class="giorno">${weekday} ${formatDateDDMMYYYY(day)}</div>
-        <select id="status-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast ? "disabled" : ""}>
+        <select id="status-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast?"disabled":""}>
           <option value="">--</option>
           <option value="smart">Smart Working</option>
           <option value="presenza">Presenza</option>
@@ -68,22 +84,24 @@ async function generateCalendar(){
           <option value="festivita">Festività</option>
           <option value="scoperto">Scoperto</option>
         </select>
-        <input type="text" id="note-${dayStr}" placeholder="Note..." oninput="onChangeDay('${dayStr}')" ${isPast ? "disabled" : ""} />
-        <label id="label-giust-${dayStr}" style="display:inline-flex; align-items:center; margin-left:4px;">
-          <input type="checkbox" id="giust-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast ? "disabled" : ""}>&nbsp;Giustificativo
+        <input type="text" id="note-${dayStr}" placeholder="Note..." oninput="onChangeDay('${dayStr}')" ${isPast?"disabled":""} />
+        <label id="label-giust-${dayStr}">
+          <input type="checkbox" id="giust-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast?"disabled":""}> Giustificativo
         </label>
-        <button class="save-btn" onclick="saveDay('${dayStr}')" ${isPast ? "disabled" : ""}>💾</button>
-        <button class="delete-btn" onclick="deleteDay('${dayStr}')" ${isPast ? "disabled" : ""}>❌</button>
+        <button class="save-btn" onclick="saveDay('${dayStr}')" ${isPast?"disabled":""}>💾</button>
+        <button class="delete-btn" onclick="deleteDay('${dayStr}')" ${isPast?"disabled":""}>❌</button>
       </div>`;
   });
 
   html += `</div></div>`;
   calendarDiv.innerHTML = html;
+
   await loadDays();
   updateAllBadges();
-  aggiornaMenu();
   document.getElementById("calendarTitle").textContent = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
 }
+
+// ... resto del codice rimane invariato ...
 
 // Caricamento dati
 async function loadDays(){
