@@ -87,7 +87,7 @@ async function generateCalendar(){
 
 // Caricamento dati
 async function loadDays(){
-  const {data,error}=await supabase.from("work_days").select("*");
+  const {data,error}=await supabaseClient.from("work_days").select("*");
   if(error){ console.error(error); return; }
   data.forEach(row=>{
     const {date,status,note,giustificativo}=row;
@@ -141,12 +141,12 @@ window.onChangeDay = function(dayStr){
   const note=document.getElementById(`note-${dayStr}`).value;
   const giust=document.getElementById(`giust-${dayStr}`)?.checked || false;
 
-  const {data:existing}=await supabase.from("work_days").select("*").eq("date",dayStr).maybeSingle();
+  const {data:existing}=await supabaseClient.from("work_days").select("*").eq("date",dayStr).maybeSingle();
 
   if(existing){
-    await supabase.from("work_days").update({status,note,giustificativo:giust}).eq("date",dayStr);
+    await supabaseClient.from("work_days").update({status,note,giustificativo:giust}).eq("date",dayStr);
   } else {
-    await supabase.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
+    await supabaseClient.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
   }
 
   initialValues[`status-${dayStr}`]=status;
@@ -167,14 +167,14 @@ window.saveDay = async function(dayStr){
 
   if(status === ""){
     // Se non c'è status, elimina eventuale record esistente
-    await supabase.from("work_days").delete().eq("date", dayStr);
+    await supabaseClient.from("work_days").delete().eq("date", dayStr);
     document.getElementById(`row-${dayStr}`).classList.remove("unsaved");
     updateMonthBadge(dayStr);
     aggiornaMenu();
     return;
   }
 
-  const {data: existing} = await supabase.from("work_days").select("*").eq("date", dayStr).maybeSingle();
+  const {data: existing} = await supabaseClient.from("work_days").select("*").eq("date", dayStr).maybeSingle();
 
   if(status === "smart" && !canAddSmart(dayStr)){
     alert("Hai già raggiunto 10 giorni di Smart Working per questo mese.");
@@ -183,9 +183,9 @@ window.saveDay = async function(dayStr){
   }
 
   if(existing){
-    await supabase.from("work_days").update({status,note,giustificativo:giust}).eq("date", dayStr);
+    await supabaseClient.from("work_days").update({status,note,giustificativo:giust}).eq("date", dayStr);
   } else {
-    await supabase.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
+    await supabaseClient.from("work_days").insert({date:dayStr,status,note,giustificativo:giust});
   }
 
   initialValues[`status-${dayStr}`] = status;
@@ -225,7 +225,7 @@ window.deleteDay=async function(dayStr){
   updateGiustificativo(dayStr);
   row.classList.remove("unsaved");
 
-  await supabase.from("work_days").delete().eq("date",dayStr);
+  await supabaseClient.from("work_days").delete().eq("date",dayStr);
   updateMonthBadge(dayStr);
   aggiornaMenu(); // Aggiorna menu live
 };
@@ -314,7 +314,7 @@ async function aggiornaMenu() {
 
   try {
     // Recupera SOLO i record di oggi e del prossimo giorno lavorativo
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("work_days")
       .select("date, status, giustificativo")
       .in("date", [todayStr, nextDayStr]);
