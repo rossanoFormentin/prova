@@ -1,86 +1,87 @@
-const today = new Date();
-let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+document.addEventListener("DOMContentLoaded", () => {
+  const today = new Date();
+  let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const calendarDiv = document.getElementById("calendar");
+  const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+  const initialValues = {};
 
-const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-const calendarDiv = document.getElementById("calendar");
-const initialValues = {};
-
-// ------------------- Funzioni di formattazione -------------------
-function formatDateLocal(d){
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function formatDateDDMMYYYY(d){
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-// ------------------- Funzioni calendario -------------------
-async function generateCalendar() {
-  const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const end   = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
-
-  const allDays = [];
-  let current = new Date(start);
-  while(current <= end){
-    if(current.getDay() !== 0 && current.getDay() !== 6) allDays.push(new Date(current));
-    current.setDate(current.getDate() + 1);
-  }
-
-  const key = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
-  let html = `<div class="month open" id="month-${key}">
-                <div class="month-header">
-                  <h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2>
-                  <div class="badges-container">
-                    <span class="badge smart">0</span>
-                    <span class="badge supplementare">0</span>
-                    <span class="badge presenza">0</span>
-                    <span class="badge ferie">0</span>
-                    <span class="badge festivita">0</span>
-                    <span class="badge scoperto">0</span>
-                  </div>
-                </div>
-                <div class="month-content">`;
-
-  allDays.forEach(day=>{
-    const dayStr = formatDateLocal(day);
-    const weekday = day.toLocaleDateString("it-IT",{weekday:"short"});
-    const isToday = dayStr === formatDateLocal(today);
-    const isPast = day < today && !isToday;
-
-    html += `
-      <div class="day-row ${isToday?"today":""} ${isPast?"disabled":""}" id="row-${dayStr}">
-        <div class="giorno">${weekday} ${formatDateDDMMYYYY(day)}</div>
-        <select id="status-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast?"disabled":""}>
-          <option value="">--</option>
-          <option value="smart">Smart Working</option>
-          <option value="presenza">Presenza</option>
-          <option value="supplementare">Smart Working Supplementare</option>
-          <option value="ferie">Ferie</option>
-          <option value="festivita">Festività</option>
-          <option value="scoperto">Scoperto</option>
-        </select>
-        <input type="text" id="note-${dayStr}" placeholder="Note..." oninput="onChangeDay('${dayStr}')" ${isPast?"disabled":""} />
-        <label id="label-giust-${dayStr}">
-          <input type="checkbox" id="giust-${dayStr}" onchange="onChangeDay('${dayStr}')" ${isPast?"disabled":""}> Giustificativo
-        </label>
-        <button class="save-btn" onclick="saveDay('${dayStr}')" ${isPast?"disabled":""}>💾</button>
-        <button class="delete-btn" onclick="deleteDay('${dayStr}')" ${isPast?"disabled":""}>❌</button>
-      </div>`;
+  // ------------------- Flatpickr -------------------
+  const monthPickerEl = document.getElementById("monthPicker");
+  flatpickr(monthPickerEl, {
+    plugins: [new monthSelectPlugin({
+      shorthand: true,
+      dateFormat: "Y-m",
+      altFormat: "F Y"
+    })],
+    defaultDate: today,
+    onChange: function(selectedDates, dateStr) {
+      if(!dateStr) return;
+      const [year, month] = dateStr.split("-").map(Number);
+      currentMonth = new Date(year, month-1, 1);
+      generateCalendar();
+    }
   });
 
-  html += `</div></div>`;
-  calendarDiv.innerHTML = html;
+  // Imposta il mese corrente subito
+  if(monthPickerEl._flatpickr) monthPickerEl._flatpickr.setDate(today, true);
 
-  await loadDays();
-  updateAllBadges();
-  document.getElementById("calendarTitle").textContent = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-}
+  // ------------------- Pulsanti navigazione -------------------
+  document.getElementById("prevMonth")?.addEventListener("click", () => {
+    currentMonth.setMonth(currentMonth.getMonth() - 1);
+    generateCalendar();
+    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+  });
+
+  document.getElementById("nextMonth")?.addEventListener("click", () => {
+    currentMonth.setMonth(currentMonth.getMonth() + 1);
+    generateCalendar();
+    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+  });
+
+  document.getElementById("actualMonth")?.addEventListener("click", () => {
+    currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    generateCalendar();
+    monthPickerEl._flatpickr?.setDate(currentMonth, true);
+  });
+
+  // ------------------- Genera calendario iniziale -------------------
+  generateCalendar();
+
+  // ------------------- Funzioni generali -------------------
+  async function generateCalendar() {
+    const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const end = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0);
+    const allDays = [];
+    let current = new Date(start);
+    while(current <= end){
+      if(current.getDay() !== 0 && current.getDay() !== 6) allDays.push(new Date(current));
+      current.setDate(current.getDate()+1);
+    }
+
+    let html = `<div class="month open"><div class="month-header"><h2>${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}</h2></div><div class="month-content">`;
+    allDays.forEach(day=>{
+      const dayStr = formatDateLocal(day);
+      const isPast = day < today;
+      html += `<div class="day-row ${isPast?"disabled":""}" id="row-${dayStr}">
+                <div>${formatDateDDMMYYYY(day)}</div>
+                <select id="status-${dayStr}" ${isPast?"disabled":""} onchange="onChangeDay('${dayStr}')">
+                  <option value="">--</option>
+                  <option value="smart">Smart Working</option>
+                  <option value="presenza">Presenza</option>
+                  <option value="supplementare">Smart Working Supplementare</option>
+                  <option value="ferie">Ferie</option>
+                  <option value="festivita">Festività</option>
+                  <option value="scoperto">Scoperto</option>
+                </select>
+              </div>`;
+    });
+    html += `</div></div>`;
+    calendarDiv.innerHTML = html;
+  }
+
+  function formatDateLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function formatDateDDMMYYYY(d){ return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
+});
 
 // ------------------- Funzione comune per cambiare mese -------------------
 function changeMonth(newMonth) {
