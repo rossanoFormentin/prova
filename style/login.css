@@ -31,6 +31,17 @@ body {
     max-width: 400px;
     box-sizing: border-box;
     text-align: center;
+ 
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+#app-section {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: auto;
+    box-sizing: border-box;
+    text-align: center;
     border: 1px solid rgba(0,0,0,0.03);
 }
 
