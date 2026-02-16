@@ -1,22 +1,9 @@
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL ="https://jreqfjmjfjlolrafmlqv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZXFmam1qZmpsb2xyYWZtbHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4OTkyMDQsImV4cCI6MjA1ODQ3NTIwNH0.VdPNIQPHl9r3Uy3s8OhsWM54DsKkiCOmDx1B5P2KipU";
- 
-// controllaConsuntivazione();
- 
- 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const today = new Date();
 
 // Imposta il selettore al mese corrente
 document.getElementById("monthPicker").value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
 
-
 let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1); 
-
 
 const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 const calendarDiv = document.getElementById("calendar");
@@ -421,96 +408,3 @@ document.getElementById("monthPicker").addEventListener("change", (e) => {
     }
   });
   
-  
-/* parte consuntivazione */
-
-/*
-function sameDay(d1, d2) {
-  return d1.toDateString() === d2.toDateString();
-}
-
-function meseCorrente() {
-  const d = new Date();
-  const mesi = [
-    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
-    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
-  ];
-  const nomeMese = mesi[d.getMonth()];
-  return `${nomeMese} ${d.getFullYear()}`;
-}
-
-async function controllaConsuntivazione() {
-  const status = document.getElementById('statusConsuntivazione');
-  const mese = meseCorrente();
-  const oggi = new Date();
-  const consuntivazioneDate = getConsuntivazioneDate(oggi);
-
-  const formatted = consuntivazioneDate.toLocaleDateString('it-IT', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
-
-  status.innerHTML = `📅 La prossima consuntivazione per il mese di <b>${mese}</b> sarà <b>${formatted}</b>.`;
-  
-
-  const { data: existing, error } = await supabase
-    .from('consuntivazioni')
-    .select('*')
-    .eq('mese_riferimento', mese);
-
-  if (error) {
-    console.error('Errore Supabase:', error);
-    return;
-  }
-
-  if (existing.length > 0) {
-    status.innerHTML += `<br>✅ Hai già completato la consuntivazione di questo mese.`;
-    return;
-  }
-
-  if (sameDay(oggi, consuntivazioneDate)) {
-    const conferma = confirm(
-      `⚠️ Oggi (${formatted}) è il giorno della consuntivazione!\nVuoi segnarla come completata?`
-    );
-
-    if (conferma) {
-      const { error: insertError } = await supabase
-        .from('consuntivazioni')
-        .insert([{ mese_riferimento: mese }]);
-
-      if (insertError) {
-        alert('Errore nel salvataggio su Supabase.');
-        console.error(insertError);
-      } else {
-        alert('✅ Consuntivazione segnata come completata!');
-        status.innerHTML += `<br>✅ Consuntivazione completata.`;
-      }
-    }
-  }
-}
-
-function getConsuntivazioneDate(date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const lastDay = new Date(year, month + 1, 0);
-
-  let workingDaysCount = 0;
-  let checkDate = new Date(lastDay);
-
-  while (workingDaysCount < 2) {
-    checkDate.setDate(checkDate.getDate() - 1);
-    const day = checkDate.getDay(); // 0=Dom, 6=Sab
-    if (day !== 0 && day !== 6) {
-      workingDaysCount++;
-    }
-  }
-
-  return checkDate;
-}
-*/
-
-/* fine parte consuntivazione */
-
-</script>
