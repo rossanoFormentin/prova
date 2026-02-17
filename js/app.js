@@ -1,6 +1,6 @@
 // Sostituisci con i tuoi dati reali dalla dashboard (Settings -> API)
-const SUPABASE_URL = 'https://usgwtkzznaewbtzmmhee.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzZ3d0a3p6bmFld2J0em1taGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODI0NTgsImV4cCI6MjA4NjY1ODQ1OH0.70lSCBlRVivTi6Cz9BbALRb-eYOEIfYXE6YqyZPuTG4'; 
+const SUPABASE_URL ="https://jreqfjmjfjlolrafmlqv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZXFmam1qZmpsb2xyYWZtbHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4OTkyMDQsImV4cCI6MjA1ODQ3NTIwNH0.VdPNIQPHl9r3Uy3s8OhsWM54DsKkiCOmDx1B5P2KipU";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
