@@ -1,3 +1,8 @@
+// --- Inizializza Supabase ---
+const SUPABASE_URL = 'https://usgwtkzznaewbtzmmhee.supabase.co';
+const SUPABASE_KEY = 'INSERISCI_LA_TUA_API_KEY';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
@@ -93,6 +98,7 @@ function getFilteredEvents() {
 
 // --- Setup legenda cliccabile come filtro ---
 function setupLegendFilter() {
+    // Filtra cliccando sulla legenda
     document.querySelectorAll('.legend-item').forEach(item => {
         item.addEventListener('click', () => {
             const status = item.dataset.status;
@@ -106,8 +112,20 @@ function setupLegendFilter() {
             highlightLegend();
         });
     });
+
+    // Bottone “Mostra tutti”
+    const resetBtn = document.getElementById('reset-legend');
+    if(resetBtn){
+        resetBtn.addEventListener('click', () => {
+            activeStatusFilter = null;
+            calendar.removeAllEvents();
+            calendar.addEventSource(getFilteredEvents());
+            highlightLegend();
+        });
+    }
 }
 
+// Evidenzia legenda selezionata
 function highlightLegend(){
     document.querySelectorAll('.legend-item').forEach(item => {
         if(item.dataset.status === activeStatusFilter){
