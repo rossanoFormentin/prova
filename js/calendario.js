@@ -15,29 +15,64 @@ async function loadCalendario() {
     setupFilters();
 }
 
+
+
 // --- Eventi filtrati in base ai checkbox ---
+let activeStatusFilter = null; // status attivo, null = mostra tutto
+
+function setupLegendFilter() {
+    document.querySelectorAll('.legend-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const status = item.dataset.status;
+
+            if (activeStatusFilter === status) {
+                // Se clicco di nuovo sullo stesso colore, reset filtro
+                activeStatusFilter = null;
+            } else {
+                activeStatusFilter = status;
+            }
+
+            // Aggiorna gli eventi del calendario
+            calendar.removeAllEvents();
+            calendar.addEventSource(getFilteredEvents());
+            highlightLegend();
+        });
+    });
+}
+
+// Evidenzia la legenda selezionata
+function highlightLegend() {
+    document.querySelectorAll('.legend-item').forEach(item => {
+        if (item.dataset.status === activeStatusFilter) {
+            item.style.border = '2px solid black';
+        } else {
+            item.style.border = 'none';
+        }
+    });
+}
+
+// Modifica getFilteredEvents per considerare il filtro legenda
 function getFilteredEvents() {
-    const checkedStatuses = Array.from(document.querySelectorAll('#calendar-filters input:checked'))
-        .map(cb => cb.value);
+    let filtered = allWorkDays;
 
-    const bgEvents = allWorkDays
-        .filter(d => checkedStatuses.includes(d.status))
-        .map(d => ({
-            start: d.date,
-            display: 'background',
-            color: getBGColor(d.status)
-        }));
+    if (activeStatusFilter) {
+        filtered = filtered.filter(d => d.status === activeStatusFilter);
+    }
 
-    const events = allWorkDays
-        .filter(d => checkedStatuses.includes(d.status))
-        .map(d => ({
-            id: d.id,
-            title: d.status,
-            start: d.date,
-            allDay: true,
-            color: getColor(d.status),
-            extendedProps: { note: d.note, giustificativo: d.giustificativo }
-        }));
+    const bgEvents = filtered.map(d => ({
+        start: d.date,
+        display: 'background',
+        color: getBGColor(d.status)
+    }));
+
+    const events = filtered.map(d => ({
+        id: d.id,
+        title: d.status,
+        start: d.date,
+        allDay: true,
+        color: getColor(d.status),
+        extendedProps: { note: d.note, giustificativo: d.giustificativo }
+    }));
 
     return [...bgEvents, ...events];
 }
