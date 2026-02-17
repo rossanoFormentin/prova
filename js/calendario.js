@@ -44,33 +44,29 @@ function renderCalendar(workDays) {
         dateClick: info => openDayModal(info.dateStr),
         eventClick: info => openDayModal(info.event.startStr, info.event),
 
-        eventContent: function(arg) {
+        eventContent: function(arg){
+
             const status = arg.event.title;
-            const giustificativo = arg.event.extendedProps.giustificativo;
             const note = arg.event.extendedProps.note || '';
+            const giustificativo = arg.event.extendedProps.giustificativo;
 
-            let innerHtml = `<div>${status}</div>`;
+            const showFlag =
+                giustificativo &&
+                ['smart','ferie','supplementare'].includes(status);
 
-            // Mostra giustificativo solo per smart, ferie o supplementare
-            if(giustificativo && ['smart','ferie','supplementare'].includes(status)){
-                innerHtml += `<div style="font-size:0.8em;">✅ Giustificativo</div>`;
-            }
+            return {
+                html: `
+                    <div class="workday-card status-${status}">
+                        <div class="wd-status">${getStatusLabel(status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                    </div>
+                `
+            };
+        }
+       
 
-            if(note){
-                innerHtml += `<div style="font-size:0.7em;">${note}</div>`;
-            }
-
-            return { html: innerHtml };
-        },
-
-        eventDidMount: info => {
-            let text = info.event.extendedProps.note || '';
-            if (info.event.extendedProps.giustificativo &&
-                ['smart','ferie','supplementare'].includes(info.event.title)) {
-                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
-            }
-            if(text) info.el.setAttribute('title', text);
-        },
+        
 
         dayCellClassNames: function(arg) {
             const todayStr = new Date().toDateString();
@@ -85,26 +81,7 @@ function renderCalendar(workDays) {
             return [];
         },
 
-      eventContent: function(arg){
-
-            const status = arg.event.title;
-            const note = arg.event.extendedProps.note || '';
-            const giustificativo = arg.event.extendedProps.giustificativo;
-
-            const showFlag =
-                giustificativo &&
-                ['smart','ferie','supplementare'].includes(status);
-
-            return {
-                html: `
-                    <div class="workday-card status-${status}">
-                        <div class="wd-status">${status}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `
-            };
-        },
+      
 
         eventDidMount: function(info){
 
@@ -114,7 +91,18 @@ function renderCalendar(workDays) {
             info.el.style.border = "none";
             info.el.style.color = "#000";
             info.el.style.boxShadow = "none";
+
+            // tooltip
+            let text = info.event.extendedProps.note || '';
+
+            if(info.event.extendedProps.giustificativo &&
+            ['smart','ferie','supplementare'].includes(info.event.title)){
+                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
+            }
+
+            if(text) info.el.setAttribute('title', text);
         }
+
 
 
     });
