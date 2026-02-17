@@ -32,7 +32,7 @@ if (!window.calendarioInizializzato) {
             }
         }));
 
-        const calendarEl = document.getElementById("calendar");
+        const calendarEl = document.getElementById("calendar2");
         if (!calendarEl) return;
 
         calendar = new FullCalendar.Calendar(calendarEl, {
