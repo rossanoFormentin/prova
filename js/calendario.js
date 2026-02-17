@@ -1,8 +1,3 @@
-// --- Inizializza Supabase ---
-const SUPABASE_URL = 'https://usgwtkzznaewbtzmmhee.supabase.co';
-const SUPABASE_KEY = 'INSERISCI_LA_TUA_API_KEY';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
