@@ -265,32 +265,28 @@ async function saveDay(date, status, note, giustificativo){
 }
 
 // --- Aggiorna calendario ---
+// --- Aggiorna evento nel calendario senza duplicati ---
 function updateCalendarEvent(day) {
+    // Trova evento esistente
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
     if (existing) {
-        // Aggiorna tutte le proprietà
-        existing.setProp("title", day.status);
-        existing.setProp("color", getColor(day.status));
-        existing.setExtendedProp("note", day.note);
-        existing.setExtendedProp("giustificativo", day.giustificativo);
-
-        // Rerender degli eventi: forza FullCalendar a rieseguire eventContent
-        calendar.rerenderEvents();
-    } else {
-        // Evento nuovo
-        calendar.addEvent({
-            id: day.id,
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: {
-                note: day.note,
-                giustificativo: day.giustificativo
-            }
-        });
+        // Rimuove l’evento esistente per far rieseguire eventContent
+        existing.remove();
     }
+
+    // Aggiunge evento aggiornato con stesso ID
+    calendar.addEvent({
+        id: day.id,  // mantiene lo stesso ID per evitare duplicati
+        title: day.status,
+        start: day.date,
+        allDay: true,
+        color: getColor(day.status),
+        extendedProps: {
+            note: day.note,
+            giustificativo: day.giustificativo
+        }
+    });
 }
 
 
