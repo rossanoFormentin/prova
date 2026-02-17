@@ -55,3 +55,10 @@ button {  border: none;  border-radius: 6px;  cursor: pointer;  font-size: 14px;
 .month.open .month-content { display: block; }
 .today { font-weight: bold; }
 .disabled { opacity: 0.6; pointer-events: none; }
+
+.status-smart { background-color: #0ea5e9; color: white; }        /* Blu */
+.status-presenza { background-color: #10b981; color: white; }     /* Verde */
+.status-ferie { background-color: #f59e0b; color: white; }        /* Arancio */
+.status-scoperto { background-color: #ef4444; color: white; }     /* Rosso */
+.status-festivita { background-color: #8b5cf6; color: white; }    /* Viola */
+.status-supplementare { background-color: #64748b; color: white; } /* Grigio */
