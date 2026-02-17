@@ -41,6 +41,15 @@ if (!window.calendarioInizializzato) {
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
+            buttonText: {
+                prev: '<- Mese precedente',
+                next: 'Mese successivo ->',
+                today: 'Oggi',
+                month: 'Mese',
+                week: 'Settimana',
+                day: 'Giorno',
+                list: 'Lista'
+            },
             initialView: "dayGridMonth",
             locale: "it",
             height: "auto",
