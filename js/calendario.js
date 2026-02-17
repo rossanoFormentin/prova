@@ -65,9 +65,6 @@ function renderCalendar(workDays) {
             };
         },
        
-
-        
-
         dayCellClassNames: function(arg) {
             const todayStr = new Date().toDateString();
             if(arg.date.toDateString() === todayStr){
@@ -81,7 +78,6 @@ function renderCalendar(workDays) {
             return [];
         },
 
-      
 
         eventDidMount: function(info){
 
@@ -108,6 +104,18 @@ function renderCalendar(workDays) {
     });
 
     calendar.render();
+}
+
+function getStatusLabel(status){
+    switch(status){
+        case "presenza": return "Presenza";
+        case "smart": return "Smart Working";
+        case "ferie": return "Ferie";
+        case "festivita": return "Festività";
+        case "scoperto": return "Scoperto";
+        case "supplementare": return "Supplementare";
+        default: return status;
+    }
 }
 
 // --- Eventi filtrati secondo legenda ---
