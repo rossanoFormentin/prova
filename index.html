@@ -1,91 +1,75 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login SPA</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style/login.css">
-    <link rel="stylesheet" href="style/style.css">
+<!-- Bootstrap & icone -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+
+<!-- SweetAlert2 -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="style/login.css">
 
 </head>
 <body class="auth-layout">
-    <div id="auth-section">
-        <div style="background: #ecfdf5; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-            <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--primary)">
-                <path d="M21.362 9.354H12V.396L2.638 14.646H12v8.958z"></path>
-            </svg>
-        </div>
-        <h2>Accedi</h2>
-        <p class="subtitle">Inserisci le tue credenziali per continuare</p>
-        <input type="email" id="email" placeholder="Email aziendale">
-        <input type="password" id="password" placeholder="Password">
-        <button id="btnLogin">Entra</button>
+
+<!-- LOGIN -->
+<div id="auth-section" class="text-center p-4">
+    <div style="background:#ecfdf5;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--primary)">
+            <path d="M21.362 9.354H12V.396L2.638 14.646H12v8.958z"></path>
+        </svg>
     </div>
+    <h2>Accedi</h2>
+    <p class="subtitle">Inserisci le tue credenziali per continuare</p>
+    <input type="email" id="email" placeholder="Email aziendale" class="form-control mb-2">
+    <input type="password" id="password" placeholder="Password" class="form-control mb-2">
+    <button id="btnLogin" class="btn btn-success w-100">Entra</button>
+</div>
 
-    <div id="app-section" class="hidden">
+<!-- APP -->
+<div id="app-section" class="hidden">
 
-    <!-- Header -->
-    <header class="app-header">
+    <!-- HEADER -->
+    <header class="app-header d-flex justify-content-between align-items-center p-3 bg-light">
         <div>
-           <p>Benvenuto: <b id="user-display"></b></p>
+            <h2>Area Riservata</h2>
+            <p>Benvenuto: <b id="user-display"></b></p>
         </div>
-        <button id="btnLogout">Esci</button>
+        <button id="btnLogout" class="btn btn-outline-danger">Esci</button>
     </header>
 
-    <div class="app-body">
-        <!-- Sidebar -->
-        <nav class="app-sidebar">
-            <ul>
-                <li>
-                    <button class="nav-btn" data-page="calendario"><i class="bi bi-calendar"></i>Calendario</button>
+    <div class="app-body d-flex">
+
+        <!-- SIDEBAR -->
+        <nav class="app-sidebar bg-light p-2" style="width:220px;">
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <button class="nav-btn btn btn-outline-primary w-100" data-page="calendario">
+                        <i class="bi bi-calendar3"></i> Calendario
+                    </button>
                 </li>
-                <li>
-                    <button class="nav-btn" data-page="presenze"><i class="bi bi-speedometer2"></i>Presenze</button>
-                </li>
-                <!--li>
-                    <button class="nav-btn" data-page="altro"><i class="bi bi-gear"></i>Altro</button>
-                </li-->
             </ul>
         </nav>
 
-        <!-- Contenuto dinamico -->
-        <main class="app-content" id="dynamic-content">
-            <!-- Qui viene caricata la pagina via fetch -->
+        <!-- CONTENUTO DINAMICO -->
+        <main class="app-content flex-grow-1 p-3" id="dynamic-content">
+            <!-- Qui verrà caricata la pagina via fetch -->
         </main>
     </div>
 </div>
 
-<script src="https://unpkg.com/fullcalendar@6.1.8/index.global.min.js"></script>
+<!-- SCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="js/app.js"></script>
-   
-    
-    
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
