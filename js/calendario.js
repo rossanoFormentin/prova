@@ -83,7 +83,7 @@ function renderCalendar(workDays) {
                 }
             }
             return [];
-        }
+        },
 
         dayCellDidMount: function(info) {
 
@@ -93,7 +93,7 @@ function renderCalendar(workDays) {
             if(!day) return;
 
             info.el.style.backgroundColor = getBGColor(day.status);
-        }
+        },
 
         eventDidMount: function(info){
 
