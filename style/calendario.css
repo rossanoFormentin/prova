@@ -50,12 +50,57 @@
 .current-day-supplementare { border-color: #6610f2; }
 .current-day-default { border-color: #0d6efd; }
 
-.fc-daygrid-event {
-    background: transparent !important;
-    border: none !important;
-    padding: 2px 4px;
-}
 
 .fc-event-main {
     background: transparent !important;
+}
+
+/* rimuove stile default fullcalendar */
+.fc-daygrid-event {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* card giorno */
+.workday-card{
+    padding:6px 8px;
+    border-radius:6px;
+    background:#ffffff;
+    font-size:0.85rem;
+    line-height:1.2;
+    box-shadow:0 1px 2px rgba(0,0,0,0.08);
+    border-left:6px solid transparent;
+}
+
+/* STATUS COLORS */
+.status-presenza { border-left-color:#198754; }
+.status-smart { border-left-color:#0d6efd; }
+.status-ferie { border-left-color:#ffc107; }
+.status-festivita { border-left-color:#6c757d; }
+.status-scoperto { border-left-color:#dc3545; }
+.status-supplementare { border-left-color:#6610f2; }
+
+/* testo */
+.wd-status{
+    font-weight:600;
+}
+
+.wd-flag{
+    font-size:0.75rem;
+    color:#0d6efd;
+}
+
+.wd-note{
+    font-size:0.75rem;
+    color:#6c757d;
+}
+
+.fc-day-today {
+    background: rgba(13,110,253,0.08) !important;
+    border-radius:8px;
+}
+
+.fc-day-today .fc-daygrid-day-number{
+    font-weight:bold;
+    color:#0d6efd;
 }

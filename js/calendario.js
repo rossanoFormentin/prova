@@ -85,14 +85,25 @@ function renderCalendar(workDays) {
             return [];
         },
 
-        dayCellDidMount: function(info) {
+      eventContent: function(arg){
 
-            const dateStr = info.date.toISOString().slice(0,10);
+            const status = arg.event.title;
+            const note = arg.event.extendedProps.note || '';
+            const giustificativo = arg.event.extendedProps.giustificativo;
 
-            const day = workDays.find(d => d.date === dateStr);
-            if(!day) return;
+            const showFlag =
+                giustificativo &&
+                ['smart','ferie','supplementare'].includes(status);
 
-            info.el.style.backgroundColor = getBGColor(day.status);
+            return {
+                html: `
+                    <div class="workday-card status-${status}">
+                        <div class="wd-status">${status}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                    </div>
+                `
+            };
         },
 
         eventDidMount: function(info){
