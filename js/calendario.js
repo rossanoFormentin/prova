@@ -20,7 +20,7 @@
         if (calendar) calendar.destroy();
 
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'listMonth',
+            initialView: 'dayGridMonth',
             locale: 'it',
             height: 'auto',
             showNonCurrentDates: false,
