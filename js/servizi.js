@@ -1,0 +1,1301 @@
+controllaConsuntivazione();
+verificaPresenzaOggi();  
+//verificaPresenzaDomani();
+verificaPresenzaProssimoGiornoLavorativo();
+  // eliminazione di un tab 
+  
+  // Popola la select quando la modale per eliminare una tab viene aperta
+  const eliminaTabModal = document.getElementById('eliminaTabModal');
+  eliminaTabModal.addEventListener('show.bs.modal', async () => {
+    const select = document.getElementById('selectTab');
+    select.innerHTML = '<option value="">-- Seleziona --</option>'; // reset
+
+    const { data, error } = await supabase.from('tabs').select('*');
+    if (error) {
+      console.error('Errore nel caricamento dei dati:', error);
+      return;
+    }
+
+    data.forEach(tab => {
+      const option = document.createElement('option');
+      option.value = tab.id;
+      option.textContent = tab.name; // cambia in base al tuo campo
+      select.appendChild(option);
+    });
+  });
+  
+  window.confermaEliminazione = async function() {
+  
+    const select = document.getElementById('selectTab');
+    const idTabDaEliminare = select.value;
+    if (!idTabDaEliminare) {
+        alert('Seleziona una tab da eliminare.');
+        return;
+      }
+
+  // Messaggio di conferma
+  const conferma = confirm('Sei sicuro di voler eliminare questa tab? Questa azione è irreversibile.');
+
+  if (!conferma) {
+    return; // esce senza fare nulla
+  }
+
+  const { error } = await supabase
+    .from('tabs')
+    .delete()
+    .eq('id', idTabDaEliminare)
+
+  if (error) {
+    alert('Errore durante l\'eliminazione')
+  } else {
+    
+  
+
+  // Chiudi il modale manualmente
+  const modal = bootstrap.Modal.getInstance(document.getElementById('eliminaTabModal'))
+  modal.hide()
+  
+  // Ricarica i tab
+    createTabs(null,null);
+  } 
+  
+}
+  
+ // fine eliminazione tab
+ 
+ 
+ 
+ 
+
+ // modifica tab 
+  let tabData = [] // Per memorizzare i dati recuperati
+
+  // Carica la select al momento dell'apertura della modale
+  const modal = document.getElementById('modificaTabModal');
+  modal.addEventListener('show.bs.modal', async () => {
+    const select = document.getElementById('selectTabEdit');
+    select.innerHTML = '<option value="">-- Seleziona --</option>';
+
+    const { data, error } = await supabase.from('tabs').select('*');
+
+    if (error) {
+      alert('Errore nel caricamento');
+      return;
+    }
+
+    tabData = data; // salva per uso successivo
+
+    data.forEach(tab => {
+      const option = document.createElement('option');
+      option.value = tab.id;
+      option.textContent = tab.name; // modifica se il campo si chiama diversamente
+      select.appendChild(option);
+    });
+  });
+  
+  
+  // Mostra il nome attuale quando si cambia selezione
+  window.mostraNomeAttuale = function () {
+    const id = document.getElementById('selectTabEdit').value;
+    const input = document.getElementById('inputNuovoNome');
+
+    const tab = tabData.find(t => t.id == id);
+    input.value = tab ? tab.name : '';
+  }
+
+  // Aggiorna il nome nel DB
+  window.modificaNomeTab = async function () {
+    const id = document.getElementById('selectTabEdit').value;
+    const nuovoNome = document.getElementById('inputNuovoNome').value.trim();
+
+    if (!id || !nuovoNome) {
+      alert('Completa tutti i campi.');
+      return;
+    }
+
+    const { error } = await supabase.from('tabs').update({ name: nuovoNome }).eq('id', id);
+
+    if (error) {
+      alert('Errore nella modifica.');
+      console.error(error);
+    } else {
+      const instance = bootstrap.Modal.getInstance(modal);
+      instance.hide();
+	  createTabs(id,null);
+	}  
+  }
+  
+  /*****  fine modifica tab  *****/
+
+
+  /*****  aggiungere tab  *****/
+ 
+  window.addTab = async function() {
+        let input = document.getElementById('inputData').value;
+
+        if (!input) {
+            alert("Il campo non può essere vuoto!");
+            return;
+        }
+
+        // Inserisce il dato nella tabella "tabs"
+        const { data, error } = await supabase
+            .from('tabs')
+            .insert([{ name: input }]);
+		// ricavo l'id del tab inserito	
+		const dataTab = await fetchTabByName(input);
+		
+		let firstTab = null;  // Prendi il primo elemento
+			
+		if (dataTab && dataTab.length > 0) {
+			firstTab = dataTab[0];  // Prendi il primo elemento
+		} else {
+			error ="Nessun dato trovato";
+		}
+		
+		
+        if (error) {
+            alert("Errore nell'inserimento: " + error.message);
+        } else {
+            alert("Dato inserito con successo!");
+            document.getElementById('inputData').value = ''; // Pulisce il campo
+            let modal = bootstrap.Modal.getInstance(document.getElementById('inserisciTabModal'));
+            modal.hide(); // Chiude il modale
+			// ricarico le tab e apro quella appena creata
+			createTabs(firstTab.id, null);
+		  }
+		
+    }
+  
+  /*****  fine aggiungere tab  *****/
+  
+  /*****  aggiungere sez  *****/
+  let dataTabId=null;
+  // passa il valore dell'id del tab 
+  const inserisciSezModal = document.getElementById('inserisciSezModal');
+  inserisciSezModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    dataTabId = button.getAttribute('data-tab-id');
+    const dataTabName = button.getAttribute('data-tab-name');
+    // Inserisci il parametro nella modale
+    const nomeTab = inserisciSezModal.querySelector('#inserisciSezModalLabel');
+    nomeTab.textContent = 'Inserisci una nuova sezione in \'' + dataTabName+ '\'';
+    
+  });
+ 
+  window.addSez = async function() {
+        let input = document.getElementById('inputDataSez').value;
+
+        if (!input) {
+            alert("Il campo non può essere vuoto!");
+            return;
+        }
+
+        // Inserisce il dato nella tabella "tabs"
+        const { data, error } = await supabase
+            .from('sections')
+            .insert([
+              {
+                tab_id: dataTabId,
+                name: input
+              }
+            ]).select();
+		
+		//console.log('sezione: ' , data[0]);
+			
+		
+        if (error) {
+            alert("Errore nell'inserimento della sezione : " + input  + " - "+ error.message);
+        } else {
+            //alert("Sezione inserito con successo!");
+            document.getElementById('inputData').value = ''; // Pulisce il campo
+            let modal = bootstrap.Modal.getInstance(document.getElementById('inserisciSezModal'));
+            modal.hide(); // Chiude il modale
+        	// ricarico la tab con la sezione creata
+			createTabs(dataTabId,data[0].id);
+		  }
+		
+    }
+  
+  /*****  fine aggiungere sez  *****/
+ 
+ 
+ /*****  modificare sez  *****/
+ 
+ // passa il valore dell'id del tab 
+  let sezData = [] // Per memorizzare i dati recuperati
+
+const modificaSezModal = document.getElementById('modificaSezModal');
+  modificaSezModal.addEventListener('show.bs.modal', async function (event) {
+    const button = event.relatedTarget;
+    dataTabId = button.getAttribute('data-tab-id');
+	
+	document.getElementById('tabIdHidden').value=dataTabId;
+	
+    const dataTabName = button.getAttribute('data-tab-name');
+    // Inserisci il parametro nella modale
+    const nomeTab = modificaSezModal.querySelector('#modificaSezModalLabel');
+    nomeTab.textContent = 'Modifica una sezione di \'' + dataTabName+ '\'';
+    
+    const selectSez = document.getElementById('selectSezEdit');
+    selectSez.innerHTML = '<option value="">-- Seleziona --</option>';
+	
+    const { data, error } = await supabase.from('sections').select('*').eq('tab_id',dataTabId ).order('name', { ascending: true });
+
+    if (error) {
+      alert('Errore nel caricamento');
+      return;
+    }
+
+    sezData = data; // salva per uso successivo
+
+    data.forEach(sez => {
+      const option = document.createElement('option');
+      option.value = sez.id;
+      option.textContent = sez.name; // modifica se il campo si chiama diversamente
+      selectSez.appendChild(option);
+    });
+  });
+  
+  
+  // Mostra il nome attuale quando si cambia selezione
+  window.mostraNomeAttualeSez = function () {
+    const id = document.getElementById('selectSezEdit').value;
+    const input = document.getElementById('inputNuovoNomeSez');
+
+    const sez = sezData.find(t => t.id == id);
+    input.value = sez ? sez.name : '';
+  }
+
+  // Aggiorna il nome nel DB
+  window.modificaNomeSez = async function () {
+    const id = document.getElementById('selectSezEdit').value;
+	
+	
+    const nuovoNome = document.getElementById('inputNuovoNomeSez').value.trim();
+
+    if (!id || !nuovoNome) {
+      alert('Completa tutti i campi.');
+      return;
+    }
+
+    const { error } = await supabase.from('sections').update({ name: nuovoNome }).eq('id', id);
+
+    if (error) {
+      alert('Errore nella modifica.');
+      console.error(error);
+    } else {
+      alert('Nome aggiornato con successo!');
+      let modal = bootstrap.Modal.getInstance(document.getElementById('modificaSezModal'));
+      modal.hide(); // Chiude il modale
+	  document.getElementById('inputNuovoNomeSez').value='';
+	  let idTabOpen = document.getElementById('tabIdHidden').value;
+	  //console.log('#### tab da aprire', idTabOpen, ' e sezione ' + id);
+      createTabs(idTabOpen, id);
+	}
+  }
+  
+  /*****  fine aggiungere sez  *****/
+ 
+ /*****  eliminare sez  *****/
+ 
+ 
+  // Popola la select quando la modale per eliminare una tab viene aperta
+  const eliminaSezModal = document.getElementById('eliminaSezModal');
+  eliminaSezModal.addEventListener('show.bs.modal', async () => {
+  
+    const button = event.relatedTarget;
+   const dataTabIdElimina = button.getAttribute('data-tab-id');
+	
+	document.getElementById('tabIdHidden').value=dataTabIdElimina;
+	
+	
+	const dataTabNameElimina = button.getAttribute('data-tab-name');
+    
+    const selectSezElimina = document.getElementById('selectSezElimina');
+    selectSezElimina.innerHTML = '<option value="">-- Seleziona --</option>'; // reset
+
+//console.log('#####dataTabIdElimina ',dataTabIdElimina)
+
+    const { data, error } = await supabase.from('sections').select('*').eq('tab_id', dataTabIdElimina).order('name', { ascending: true });
+	
+console.log('#####data ',data)
+    
+	if (error) {
+      console.error('Errore nel caricamento dei dati:', error);
+      return;
+    }
+
+    data.forEach(sez => {
+      const option = document.createElement('option');
+      option.value = sez.id;
+      option.textContent = sez.name; // cambia in base al tuo campo
+      selectSezElimina.appendChild(option);
+    });
+  });
+  
+  window.confermaEliminazioneSez = async function() {
+  
+    const select = document.getElementById('selectSezElimina');
+    const idSezDaEliminare = select.value;
+    if (!idSezDaEliminare) {
+        alert('Seleziona una sezione da eliminare.');
+        return;
+      }
+
+  // Messaggio di conferma
+  const conferma = confirm('Sei sicuro di voler eliminare questa Sezione? Questa azione è irreversibile.');
+
+  if (!conferma) {
+    return; // esce senza fare nulla
+  }
+
+  const { error } = await supabase
+    .from('sections')
+    .delete()
+    .eq('id', idSezDaEliminare)
+
+  if (error) {
+    alert('Errore durante l\'eliminazione della sezione' )
+  } else {
+   
+  // Chiudi il modale manualmente
+  const modal = bootstrap.Modal.getInstance(document.getElementById('eliminaSezModal'))
+  modal.hide();
+  
+  let idTabOpen = document.getElementById('tabIdHidden').value;
+	
+  //console.log('#### tab da aprire', idTabOpen);
+    
+    createTabs(idTabOpen,null);
+  } 
+  
+}
+  
+/*****  fine eliminare sez  *****/
+
+/************ inserisci nuovo link ***********/
+  let dataLinkId=null;
+  // passa il valore dell'id del tab 
+  const inserimentoLinkModal = document.getElementById('inserimentoLinkModal');
+  inserimentoLinkModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const dataSezId = button.getAttribute('data-id');
+	const dataSezName = button.getAttribute('data-name');
+	 // Inserisci il parametro nella modale
+    const nomeSez = inserimentoLinkModal.querySelector('#InserimentoLinkModalLabel');
+    nomeSez.textContent = 'Inserisci un nuovo link nella sezione \'' + dataSezName+ '\'';
+	
+	document.getElementById('sezIdHidden').value=dataSezId;
+    
+  });
+ 
+  window.addLink = async function() {
+  
+        let inputNomeLink = document.getElementById('inputNomeNewLink').value;
+		let inputUrlLink = document.getElementById('inputUrlNewLink').value;
+		let inputDescLink = document.getElementById('inputDescNewLink').value;
+		let dataSezId = document.getElementById('sezIdHidden').value;
+		let dataTabId = document.getElementById('tabIdHidden').value;
+
+		
+        if (!inputNomeLink || !inputUrlLink) {
+            alert("Nome e url sono obbligatori!");
+            return;
+        }
+
+        // Inserisce il dato nella tabella "tabs"
+        const { data, error } = await supabase
+            .from('links')
+            .insert([
+              {
+                section_id: dataSezId,
+                name: inputNomeLink,
+				url: inputUrlLink,
+				descrizione: inputDescLink
+				
+              }
+            ]);
+		
+        if (error) {
+            alert("Errore nell'inserimento del nuovo link " + error.message);
+        } else {
+            alert("Link inserito con successo!");
+        
+			document.getElementById('inputNomeNewLink').value = ''; // Pulisce il campo
+            document.getElementById('inputUrlNewLink').value = ''; // Pulisce il campo
+            document.getElementById('inputDescNewLink').value = ''; // Pulisce il campo
+            document.getElementById('sezIdHidden').value = ''; // Pulisce il campo
+            
+			fetchSectionById(dataSezId).then((sezioni) => {
+			const primaSezione = sezioni?.[0]; // prende solo la prima riga
+			//console.log(primaSezione);
+			const modal = bootstrap.Modal.getInstance(document.getElementById('inserimentoLinkModal'))
+			modal.hide();
+			// ricarico la tab con la sezione creata
+			createTabs(primaSezione.tab_id, dataSezId);
+		}).catch((err) => {
+			console.error('Errore:', err);
+			createTabs(null, null);
+		});
+			
+			
+		  }
+		
+    }
+/************ fine inserisci nuovo link ***********/
+  
+/******** modifica link *********/
+
+  const modificaLinkModal = document.getElementById('modificaLinkModal');
+  modificaLinkModal.addEventListener('show.bs.modal', async () => {
+  
+   const link = event.relatedTarget;
+   
+   const idSezLinkModifica = link.getAttribute('data-sez-id');
+   const nameSezLinkModifica = link.getAttribute('data-sez-name');
+   const urlLinkModifica = link.getAttribute('data-link-url');
+   const nameLinkModifica = link.getAttribute('data-link-name');
+   const idLinkModifica = link.getAttribute('data-link-id');
+   const descLinkModifica = link.getAttribute('data-link-desc');
+   
+   document.getElementById('inputDescLink').value=descLinkModifica;
+   document.getElementById('inputNomeLink').value=nameLinkModifica;
+   document.getElementById('inputUrlLink').value=urlLinkModifica;
+   document.getElementById('sezIdHidden').value=idSezLinkModifica;
+   document.getElementById('linkIdHidden').value=idLinkModifica;
+   const nomeSez = modificaLinkModal.querySelector('#ModificalinkModalLabel');
+   nomeSez.textContent = 'Modifica link nella sezione \'' + nameSezLinkModifica+ '\'';
+   
+  });
+  
+  
+  window.confermaModificaLink = async function() {
+ 
+  const descLinkModifica = document.getElementById('inputDescLink').value;
+  const nameLinkModifica = document.getElementById('inputNomeLink').value;
+  const urlLinkModifica = document.getElementById('inputUrlLink').value;
+  const idSezLinkModifica =document.getElementById('sezIdHidden').value;
+  const idLinkModifica =document.getElementById('linkIdHidden').value;
+  
+  const {data, error } = await supabase
+    .from('links')
+    .update({'url':urlLinkModifica ,'name':nameLinkModifica, 'descrizione': descLinkModifica})
+    .eq('section_id', idSezLinkModifica)
+	.eq('id',idLinkModifica)
+
+	//console.log('çççççç idSezLinkModifica', idSezLinkModifica);	
+	if (error) {
+		alert('Errore durante la modifica del link' )
+	} else {
+		 
+		fetchSectionById(idSezLinkModifica).then((sezioni) => {
+			const primaSezione = sezioni?.[0]; // prende solo la prima riga
+			//console.log(primaSezione);
+			const modal = bootstrap.Modal.getInstance(document.getElementById('modificaLinkModal'))
+			modal.hide();
+			// ricarico la tab con la sezione creata
+			createTabs(primaSezione.tab_id, idSezLinkModifica);
+		}).catch((err) => {
+			console.error('Errore:', err);
+			createTabs(null, null);
+		});
+	}
+   
+  
+}
+
+/******** fine modifica link *********/
+
+/******** elimina link *********/
+
+  const eliminaLinkModal = document.getElementById('eliminaLinkModal');
+  eliminaLinkModal.addEventListener('show.bs.modal', async () => {
+  
+   const link = event.relatedTarget;
+   
+   const idSezLinkElimina = link.getAttribute('data-sez-id');
+   const urlLinkElimina = link.getAttribute('data-link-url');
+   const nameLinkElimina = link.getAttribute('data-link-name');
+   const idLinkElimina = link.getAttribute('data-link-id');
+   const descLinkElimina = link.getAttribute('data-link-desc');
+   const nameSezLinkElimina = link.getAttribute('data-sez-name');
+   
+   //console.log('##### nome sez:' , nameSezLinkElimina);
+   
+   document.getElementById('inputDescLinkElimina').value=descLinkElimina;
+   document.getElementById('inputNomeLinkElimina').value=nameLinkElimina;
+   document.getElementById('inputUrlLinkElimina').value=urlLinkElimina;
+   document.getElementById('sezIdHidden').value=idSezLinkElimina;
+   document.getElementById('linkIdHidden').value=idLinkElimina;
+   
+   const nomeSez = eliminaLinkModal.querySelector('#eliminalinkModalLabel');
+   nomeSez.textContent = 'Modifica link nella sezione \'' + nameSezLinkElimina + '\'';
+   
+   
+  });
+  
+  
+  window.eliminaModificaLink = async function () {
+  
+  const idSezLinkElimina = document.getElementById('sezIdHidden').value;
+  const idLinkElimina = document.getElementById('linkIdHidden').value;
+   
+  
+  try {
+    const sezioni = await fetchSectionById(idSezLinkElimina);
+    const primaSezione = sezioni?.[0];
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('eliminaLinkModal'));
+    modal.hide();
+
+    const { error } = await supabase
+      .from('links')
+      .delete()
+      .eq('id', idLinkElimina);
+
+    if (error) {
+      console.error('Errore Supabase:', error);
+    }
+
+    createTabs(primaSezione?.tab_id, idSezLinkElimina);
+  } catch (err) {
+    console.error('Errore generale:', err);
+    createTabs(null, null);
+  }
+}
+
+
+/******** fine elimina link *********/  
+    
+
+  // Funzione per salvare un link
+  async function salvaLink(id, name, url) {
+      const { data, error } = await supabase
+          .from("links")
+          .insert([{ id: idSez, name: name, url_link: url }]);
+      if (error) {
+          console.error("Errore:", error);
+      } else {
+          //console.log("Link salvato:", data);
+      }
+  }
+
+
+
+  // Funzione per recuperare tutti i link
+  async function recuperaLinksSez(idSez) {
+      const { data, error } = await supabase
+          .from("links")
+          .select("*")
+          .eq('section_id', idSez.id);
+      if (error) {
+          console.error("Errore recupero links :", error);
+		      return[];
+      } 
+	  
+	  //console.log('links recuperati: ' + data)
+	  return data;
+	  
+  }
+
+// Funzione per recuperare i dati dalla tabella sections
+    async function fetchSectionById(id) {
+        const { data, error } = await supabase
+            .from('sections')
+            .select('*')
+			.eq('id', id)
+			.order('name', { ascending: true });
+        if (error) {
+            console.error('Errore nel recupero dei tab:', error);
+            return [];
+        }
+		
+	console.log('fetchSectionById(id)', data);	
+       
+	   return data;
+    }
+	
+// Funzione per recuperare i nomi delle tab dalla tabella Supabase
+    async function fetchTabNames() {
+        const { data, error } = await supabase
+            .from('tabs')
+            .select('*');
+        if (error) {
+            console.error('Errore nel recupero dei tab:', error);
+            return [];
+        }
+       
+	   return data;
+    }
+	
+// Funzione per recuperare il tab dall'id
+	async function fetchTabById(tabId) {
+        const { data, error } = await supabase
+            .from('tabs')
+            .select('*')
+			.eq('id', tabId);
+
+        if (error) {
+            console.error('Errore nel recupero dei tab:', error);
+            return [];
+        }
+       
+	   return data;
+    }
+	
+  // Funzione per recuperare il tab dal nome
+	async function fetchTabByName(name) {
+        const { data, error } = await supabase
+            .from('tabs')
+            .select('*')
+			.eq('name', name);
+
+        if (error) {
+            console.error('Errore nel recupero dei tab:', error);
+            return [];
+        }
+	   
+	   return data;
+    }
+	
+	// Funzione per caricare le sezioni
+	async function loadSections( tabId ) {
+		const { data, error } = await supabase
+			.from('sections')
+			.select('*')
+			.eq('tab_id', tabId).order('name', { ascending: true });
+		if (error) {
+            console.error('Errore nel recupero dei sezioni per tab_id:', error);
+            return [];
+        }
+		return data;
+	}
+	
+	
+	function createAccordionButton(collapseId, show, textContent) {
+  const button = document.createElement('button');
+
+  // Aggiunta classi
+  button.className = `bg-info-subtle accordion-button ${show ? '' : 'collapsed'}`;
+
+  // Tipo del bottone
+  button.type = 'button';
+
+  // Attributi Bootstrap Collapse
+  button.setAttribute('data-bs-toggle', 'collapse');
+  button.setAttribute('data-bs-target', `#${collapseId}`);
+  button.setAttribute('aria-expanded', show ? 'true' : 'false');
+  button.setAttribute('aria-controls', collapseId);
+
+  // Testo interno (opzionale)
+  button.textContent = textContent || 'Apri sezione';
+
+  return button;
+}
+  
+  function createAccordionCollapse(sezione, collapseId, headingId, show, linksList) {
+  
+  const collapseDiv = document.createElement('div');
+  collapseDiv.id = collapseId;
+  
+  //console.log('§§§ createAccordionCollapse show', show);
+  
+  collapseDiv.className = `accordion-collapse collapse ${show ? 'show' : ''}`;
+  collapseDiv.setAttribute('aria-labelledby', headingId);
+  collapseDiv.setAttribute('data-bs-parent', '#accordionSections');
+
+  // <div class="accordion-body"></div>
+  const bodyDiv = document.createElement('div');
+  bodyDiv.className = 'accordion-body';
+  
+  // bottone per inserire un nuovo Link
+  const dataButtonInserimentoLink = { text: 'Aggiungi link', id: sezione.id,  name:sezione.name, modal:'inserimentoLinkModal', className:'btn btn-sm btn-outline-primary me-1', toggle :'modal' }
+  const buttonInserimentoLink =  createButton(dataButtonInserimentoLink)
+  const buttonInserimentoDiv = document.createElement('div');
+  buttonInserimentoDiv.className='text-end';
+  buttonInserimentoDiv.appendChild(buttonInserimentoLink);
+  bodyDiv.appendChild(buttonInserimentoDiv);
+
+  // Opzionale: puoi aggiungere contenuto al body
+  bodyDiv.appendChild(linksList);
+
+  // Append accordion-body dentro collapseDiv
+  collapseDiv.appendChild(bodyDiv);
+
+  return collapseDiv;
+}
+
+	function creaAccordionItem(sezione, index, show = '') {
+    
+    //console.log('creaAccordionItem(sezione, index, show = \'\')', sezione + " "+ index + " "+show);
+    
+	  const accordionItem = document.createElement('div');
+	  accordionItem.className = 'accordion-item mb-3';
+
+	  // ID univoci per evitare conflitti
+	  const collapseId = `collapse-${index}`;
+	  const headingId = `heading-${index}`;
+    
+    const accordionItemH2 = document.createElement('h2');
+    accordionItemH2.className='accordion-header d-flex align-items-center justify-content-between';
+    accordionItemH2.id=`${headingId}`;
+    
+    const accordionItemButton = createAccordionButton(collapseId, show, sezione.name); 
+    
+    accordionItemH2.appendChild(accordionItemButton);
+    
+    //console.log('accordionItemH2:', accordionItemH2) 
+    
+    accordionItem.appendChild(accordionItemH2);	
+    //console.log('accordionItem con h2', accordionItem) 
+    
+	
+    const linksList = document.createElement('div');
+	
+    recuperaLinksSez(sezione).then(links => { 
+          links.forEach(link => {
+          const linkItem = document.createElement("div");
+          linkItem.classList.add("link-item");
+
+          const linkDiv = document.createElement("div");
+          linkDiv.classList.add("link");
+          
+          const anchor = document.createElement("a");
+          anchor.href = link.url;
+          anchor.target = "_blank";
+          anchor.textContent = link.name;
+          linkDiv.appendChild(anchor);
+
+          const descriptionDiv = document.createElement("div");
+          descriptionDiv.classList.add("description");
+          descriptionDiv.innerHTML = link.descrizione;
+
+          const buttonsDiv = document.createElement("div");
+          buttonsDiv.classList.add("buttons");
+          
+          const dataModalModificaLink = { sez_id: sezione.id, sez_name: sezione.name, link_id: link.id, link_url: link.url , link_name: link.name , link_desc: link.descrizione,  modal:'modificaLinkModal'};
+          const linkModifica = createIconLink(dataModalModificaLink, 'bi-pencil', 'modifica', '_blank')
+          buttonsDiv.appendChild(linkModifica);
+          
+          const dataModalEliminaLink = { sez_id: sezione.id, sez_name: sezione.name, link_id: link.id, link_url: link.url , link_name: link.name , link_desc: link.descrizione, modal:'eliminaLinkModal'};
+          const linkElimina = createIconLink(dataModalEliminaLink, 'bi-trash', 'elimina', '_blank')
+          buttonsDiv.appendChild(linkElimina);
+          
+          linkItem.appendChild(linkDiv);
+          linkItem.appendChild(descriptionDiv);
+          linkItem.appendChild(buttonsDiv);
+          
+          linksList.appendChild(linkItem);
+       
+        });
+      //console.log('linksList',linksList) 
+    }); 
+	  
+    const accordionCollapse = createAccordionCollapse(sezione, collapseId, headingId, show, linksList );
+    
+    //console.log(accordionCollapse)
+    
+    accordionItem.appendChild(accordionCollapse);
+    
+    //console.log('accordionItem', accordionItem); 
+    
+	 	
+	  return accordionItem;
+	}
+  
+  function createImageLink(href, imgSrc, altText = '', target = '_blank') {
+      // Crea l'elemento <a>
+      const link = document.createElement('a');
+      link.href = href;
+      link.target = target;
+
+      // Crea l'elemento <img>
+      const img = document.createElement('img');
+      img.src = imgSrc;
+      img.alt = altText;
+      img.style.maxWidth = '100px'; // opzionale: limita dimensione
+
+      // Inserisci <img> dentro <a>
+      link.appendChild(img);
+
+      return link;
+  }
+  
+
+	function createButton(data) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className =data.className;
+  button.setAttribute('data-bs-toggle', data.toggle);
+  button.setAttribute('data-bs-target', '#' + data.modal);
+  button.setAttribute('data-id', data.id);
+  button.setAttribute('data-name', data.name);
+  button.textContent = data.text;
+  return button;
+}
+ 
+  function createIconLink(data, iconName, title = '', target = '_blank') {
+  // Crea il link
+  const link = document.createElement('a');
+  link.href = '#';
+  link.target = target;
+  link.title = title;
+  link.className = 'me-2'; // margine opzionale
+
+  link.setAttribute('data-bs-toggle', 'modal');
+  link.setAttribute('data-bs-target', '#' +data.modal);
+  link.setAttribute('data-sez-id', data.sez_id);
+  link.setAttribute('data-sez-name', data.sez_name);
+  link.setAttribute('data-link-id', data.link_id);
+  link.setAttribute('data-link-name', data.link_name);
+  link.setAttribute('data-link-url', data.link_url);
+  link.setAttribute('data-link-desc', data.link_desc);
+  
+        
+  
+  
+  // Crea l'icona
+  const icon = document.createElement('i');
+  icon.className = `bi ${iconName}`; // esempio: 'bi-box-arrow-up-right'
+
+  // Inserisce l'icona dentro il link
+  link.appendChild(icon);
+
+  return link;
+} 
+  
+    // Funzione per creare le tab dinamicamente
+    async function createTabs(activeIdTab, activeIdSez) {
+	
+		document.getElementById('loader').style.display='block';	
+		document.getElementById('content').style.display='none';	
+		
+		const tabNames = await fetchTabNames();
+        const tabsContainer = document.getElementById('dynamic-tabs');
+        const tabContentContainer = document.getElementById('dynamic-tab-content');
+		tabsContainer.innerHTML = '';
+		tabContentContainer.innerHTML = '';
+		
+		const tabsContainerButtons = document.getElementById('dynamic-tabs-buttons');
+        
+		tabsContainerButtons.innerHTML = '';
+		
+		tabsContainerButtons.innerHTML +=`
+			<li class="nav-item">
+				<button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inserisciTabModal">Aggiungi Tab</button>
+			`;
+		if(tabNames.length >0){
+		tabsContainerButtons.innerHTML +=`
+				<button type="button" class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#modificaTabModal" >Modifica Tab</button>
+				<button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#eliminaTabModal">Elimina Tab</button>
+			`;
+		}
+		tabsContainerButtons.innerHTML +=`</li>`;
+		
+		tabNames.forEach((tab,index) => {
+				
+			let isActive = '';
+			
+			 if(activeIdTab === null){
+				// attivo il primo tab
+				if(index === 0 ){
+					isActive =  'active';
+				}
+			}else // activeIdTab valorizzato
+			{
+				if(activeIdTab === tab.id){
+					isActive =  'active';
+				}
+			} 
+			
+		   // Crea l'elemento della tab e ne carica le sezioni
+            const tabElement = document.createElement('li');
+            tabElement.className = 'nav-item';
+            tabElement.innerHTML = `<a class="nav-link ${isActive}" id="tab-${tab.id}" data-bs-toggle="tab" href="#content-${tab.id}" role="tab"><b>${tab.name}</b></a>
+			`;
+            tabsContainer.appendChild(tabElement);
+            // Crea il contenuto della tab
+            const tabContentElement = document.createElement('div');
+            tabContentElement.className = `tab-pane fade show ${isActive}`;
+            tabContentElement.id = `content-${tab.id}`;
+            tabContentElement.role = 'tabpanel';
+            loadSections(tab.id).then(sezioni => {  
+				      const tabAccordion = document.createElement('div');
+              tabAccordion.className = `accordion p-3 border rounded`;
+              
+              // bottoni per aggiungere/modificare/eliminare sezione
+              if(sezioni.length == 0){
+				tabAccordion.innerHTML =`
+				  <div class="d-flex">
+				  ${tab.name}
+				  <ul class="nav nav-pills mb-2 ms-auto">
+					<li class="nav-item">
+						<button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inserisciSezModal" data-tab-id="${tab.id}" data-tab-name="${tab.name}">Aggiungi Sezione</button>
+					</li>
+				  </ul></div>`;
+              }
+			  
+			  if(sezioni.length >0){
+				  tabAccordion.innerHTML =`
+				  <div class="d-flex">
+				  ${tab.name}
+				  <ul class="nav nav-pills mb-2 ms-auto">
+					<li class="nav-item">
+						<button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#inserisciSezModal" data-tab-id="${tab.id}" data-tab-name="${tab.name}">Aggiungi Sezione</button>
+						<button type="button" class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#modificaSezModal" data-tab-id="${tab.id}" data-tab-name="${tab.name}">Modifica Sezione</button>
+						<button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#eliminaSezModal" data-tab-id="${tab.id}" data-tab-name="${tab.name}">Elimina Sezione</button>
+					</li>
+				  </ul></div>`;
+              }
+              // carico le sezioni per tab
+              
+              
+			  //console.log("### activeIdSez", activeIdSez);
+			  
+              sezioni.forEach((sezione, index) => {
+			  
+				let show = '';
+			
+				if(activeIdSez != null){
+					if(activeIdSez === sezione.id){
+						show =  'show';
+					}
+				}
+				/*
+				if(activeIdSez === null){
+					// attivo la prima sezione
+					if(index === 0 ){
+						show =  'show';
+					}
+				}else // activeIdSez valorizzato
+				{
+					if(activeIdSez === sezione.id){
+						show =  'show';
+					}
+				}
+				*/
+				
+				//console.log("### show sezione", index + " - " +  show);
+				
+				const item = creaAccordionItem(sezione, index, show);
+                tabAccordion.appendChild(item);
+              });
+              tabContentElement.appendChild(tabAccordion);
+             });
+            tabContentContainer.appendChild(tabContentElement);
+        });
+		
+		document.getElementById('loader').style.display='none';	
+		document.getElementById('content').style.display='block';	
+		
+    }
+	
+    // Inizializza la creazione delle tab
+    createTabs(null, null);
+	
+	
+async function verificaPresenzaOggi(userId) {
+    const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+
+    const { data, error } = await supabase
+        .from('work_days')
+        .select('*')
+        .eq('date', today);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const span = document.getElementById('presenzeOggi');
+
+    if (data.length > 0) {
+	
+        const presenza = data[0];
+		
+		//console.log(presenza)
+		
+		let stato ="";
+	
+		if(presenza.status === 'smart'){
+			stato ="Smart working";
+		}else if(presenza.status === 'supplementare'){
+			stato ="Smart working supplementare";
+		}else if(presenza.status === 'presenza'){
+			stato ="In sede";
+		}else if(presenza.status === 'scoperto'){
+			stato ="Giorno scoperto da smart";
+		}else{
+			stato="Non dichiarato"	
+		}
+		
+        // Badge per lo status
+        let statusBadge = `oggi: <span class="fw-bold badge bg-primary me-1">${stato}</span>`;
+        // Badge per giustificativo solo se status è smart o supplementare
+        let giustificativoBadge = '';
+        if ((presenza.status === 'smart' || presenza.status === 'supplementare') && presenza.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-success">Giustificativo richiesto</span>`;
+        }
+		if ((presenza.status === 'smart' || presenza.status === 'supplementare') && !presenza.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-danger">Giustificativo NON richiesto</span>`;
+        }
+
+        span.innerHTML = statusBadge + giustificativoBadge;
+    } else {
+        span.innerHTML = `<span class="text-muted">Nessuna presenza</span>`;
+    }
+}
+
+/*
+async function verificaPresenzaDomani() {
+    const today = new Date();
+	const tomorrow = new Date(today);
+	tomorrow.setDate(today.getDate() + 1); // aggiunge 1 giorno
+
+	const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+    const { data, error } = await supabase
+        .from('work_days')
+        .select('*')
+        .eq('date', tomorrowStr);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const span = document.getElementById('presenzeDomani');
+
+    if (data.length > 0) {
+	
+        const presenzaDomani = data[0];
+		
+		//console.log(presenzaDomani)
+		
+		let stato ="";
+	
+		if(presenzaDomani.status === 'smart'){
+			stato ="Smart working";
+		}else if(presenzaDomani.status === 'supplementare'){
+			stato ="Smart working supplementare";
+		}else if(presenzaDomani.status === 'presenza'){
+			stato ="In sede";
+		}else if(presenzaDomani.status === 'scoperto'){
+			stato ="Giorno scoperto da smart";
+		}else{
+			stato="Non dichiarato"	
+		}
+		
+        // Badge per lo status
+        let statusBadge = `domani: <span class="fw-bold badge bg-primary me-1">${stato}</span>`;
+        // Badge per giustificativo solo se status è smart o supplementare
+        let giustificativoBadge = '';
+        if ((presenzaDomani.status === 'smart' || presenzaDomani.status === 'supplementare') && presenzaDomani.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-success">Giustificativo richiesto</span>`;
+        }
+		if ((presenzaDomani.status === 'smart' || presenzaDomani.status === 'supplementare') && !presenzaDomani.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-danger">Richiedere giustificativo</span>`;
+        }
+
+        span.innerHTML = statusBadge + giustificativoBadge;
+    } else {
+        span.innerHTML = `<span class="text-muted">Nessuna presenza</span>`;
+    }
+}
+
+*/
+
+async function verificaPresenzaProssimoGiornoLavorativo() {
+    const today = new Date();
+    const nextWorkDay = new Date(today);
+
+    // Calcola il prossimo giorno lavorativo (salta sabato e domenica)
+    do {
+        nextWorkDay.setDate(nextWorkDay.getDate() + 1);
+    } while (nextWorkDay.getDay() === 6 || nextWorkDay.getDay() === 0); 
+    // 0 = Domenica, 6 = Sabato
+
+    const nextWorkDayStr = nextWorkDay.toISOString().slice(0, 10);
+
+    // Nomi dei giorni in italiano
+    const giorniSettimana = [
+        'domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'
+    ];
+
+    // Formatta data come "lunedì 20/10/2025"
+    const giornoNome = giorniSettimana[nextWorkDay.getDay()];
+    const giorno = nextWorkDay.getDate().toString().padStart(2, '0');
+    const mese = (nextWorkDay.getMonth() + 1).toString().padStart(2, '0');
+    const anno = nextWorkDay.getFullYear();
+    const dataFormattata = `${giornoNome} ${giorno}/${mese}/${anno}`;
+
+    const { data, error } = await supabase
+        .from('work_days')
+        .select('*')
+        .eq('date', nextWorkDayStr);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const span = document.getElementById('presenzeDomani');
+
+    if (data.length > 0) {
+        const presenza = data[0];
+        //console.log(presenza);
+
+        let stato = "";
+        if (presenza.status === 'smart') {
+            stato = "Smart working";
+        } else if (presenza.status === 'supplementare') {
+            stato = "Smart working supplementare";
+        } else if (presenza.status === 'presenza') {
+            stato = "In sede";
+        } else if (presenza.status === 'ferie') {
+            stato = "Ferie";
+        } else if (presenza.status === 'festivita') {
+            stato = "Festività";
+        } else if (presenza.status === 'scoperto') {
+            stato = "Giorno scoperto da smart";
+        } else {
+            stato = "Non dichiarato";
+        }
+
+        // Badge per lo status
+        let statusBadge = `Prossimo giorno lavorativo: ${dataFormattata} <span class="fw-bold badge bg-primary me-1">${stato}</span>`;
+        
+        // Badge giustificativo
+        let giustificativoBadge = '';
+        if ((presenza.status === 'smart' || presenza.status === 'supplementare') && presenza.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-success">Giustificativo richiesto</span>`;
+        } else if ((presenza.status === 'smart' || presenza.status === 'supplementare') && !presenza.giustificativo) {
+            giustificativoBadge = `<span class="fw-bold badge bg-danger">Richiedere giustificativo</span>`;
+        }
+
+        span.innerHTML = statusBadge + giustificativoBadge;
+    } else {
+        span.innerHTML = `<span class="text-muted">Nessuna presenza per il prossimo giorno lavorativo (${dataFormattata})</span>`;
+    }
+}
+
+/* parte consuntivazione */
+
+function sameDay(d1, d2) {
+  return d1.toDateString() === d2.toDateString();
+}
+
+function confrontaData(fixedDateString) {
+  const oggi = new Date();
+  const fixedDate = new Date(fixedDateString);
+
+  // azzera ore/minuti/secondi per confronto solo sulla data
+  oggi.setHours(0, 0, 0, 0);
+  fixedDate.setHours(0, 0, 0, 0);
+
+  if (oggi.getTime() === fixedDate.getTime()) {
+    return 0;   // oggi
+  } else if (oggi.getTime() > fixedDate.getTime()) {
+    return -1;  // passata
+  } else {
+    return 1;   // futura
+  }
+}
+
+
+
+
+function meseCorrente() {
+  const d = new Date();
+  const mesi = [
+    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+  ];
+  const nomeMese = mesi[d.getMonth()];
+  return `${nomeMese} ${d.getFullYear()}`;
+}
+
+// --- Funzione principale ---
+async function controllaConsuntivazione() {
+  const status = document.getElementById('statusConsuntivazione');
+  const mese = meseCorrente();
+  const oggi = new Date();
+  const consuntivazioneDate = getConsuntivazioneDate(oggi);
+
+  // Mostra la data calcolata
+  const formatted = consuntivazioneDate.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  
+  // Controlla se è già stata fatta
+  const { data: existing, error } = await supabase
+    .from('consuntivazioni')
+    .select('*')
+    .eq('mese_riferimento', mese);
+
+  if (error) {
+    console.error('Errore Supabase:', error);
+    return;
+  }
+
+  if (existing.length > 0) {
+    status.innerHTML = `✅ Hai già completato la consuntivazione di questo mese.`;
+    return;
+  }else{
+    status.innerHTML  = `📅 La prossima consuntivazione per il mese di <b>${mese}</b> sarà <b>${formatted}</b>.`;
+	
+  }
+
+  // Se oggi è il giorno della consuntivazione o uno passato rispetto la consuntivazione → mostra alert
+  
+  let confronto = confrontaData(consuntivazioneDate);
+  console.log(confronto);
+  let stringAlert ='';
+  
+  if (confronto<=0) {
+    if(confronto == 0){
+		stringAlert =`⚠️ Oggi (${formatted}) è il giorno della consuntivazione!\nVuoi segnarla come completata?`
+	}else if(confronto < 0){
+		stringAlert =`⚠️ Sei in ritardo con la consuntivazione!\nVuoi segnarla come completata?`
+	}else{
+	}
+	
+	const conferma = confirm(stringAlert);
+    if (conferma) {
+      const { error: insertError } = await supabase
+        .from('consuntivazioni')
+        .insert([{ mese_riferimento: mese }]);
+
+      if (insertError) {
+        alert('Errore nel salvataggio su Supabase.');
+        console.error(insertError);
+      } else {
+        alert('✅ Consuntivazione segnata come completata!');
+        status.innerHTML = `✅ Consuntivazione completata.`;
+      }
+    }
+  }
+}
+
+function getConsuntivazioneDate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const lastDay = new Date(year, month + 1, 0);
+
+  let workingDaysCount = 0;
+  let checkDate = new Date(lastDay);
+
+  while (workingDaysCount < 2) {
+    checkDate.setDate(checkDate.getDate() - 1);
+    const day = checkDate.getDay(); // 0=Dom, 6=Sab
+    if (day !== 0 && day !== 6) {
+      workingDaysCount++;
+    }
+  }
+
+  return checkDate;
+}
