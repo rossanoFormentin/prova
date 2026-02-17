@@ -20,17 +20,17 @@
         if (calendar) calendar.destroy();
 
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
+            initialView: 'listMonth',
             locale: 'it',
             height: 'auto',
+            showNonCurrentDates: false,
             headerToolbar: {
-                left: 'myPrev,myNext today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'myPrev,myNext today',
+                left: 'title'
             },
             customButtons: {
-                myPrev: { text: '← Indietro', click: () => calendar.prev() },
-                myNext: { text: 'Avanti →', click: () => calendar.next() }
+                myPrev: { text: '← Mese precedente', click: () => calendar.prev() },
+                myNext: { text: 'Mese successivo →', click: () => calendar.next() }
             },
             events: workDays.map(d => ({
                 id: d.id,
