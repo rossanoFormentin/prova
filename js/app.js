@@ -145,7 +145,7 @@ function initCalendar(workDays) {
 
 async function loadCalendario() {
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("work_days")
         .select("*")
         .order("date");
@@ -214,7 +214,7 @@ async function openDayModal(date, event = null) {
 
 async function saveDay(date, status, note, giustificativo) {
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("work_days")
         .upsert({
             date,
