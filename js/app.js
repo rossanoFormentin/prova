@@ -8,7 +8,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const routes = {
     //servizi: 'servizi.html',     
     //altro: 'altro.html', 
-    calendario: 'calendario.html'        
+    calendario: 'pages/calendario.html'        
 };
 
 // Selettori DOM
