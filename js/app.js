@@ -92,11 +92,18 @@ async function loadPage(page) {
 
         // ✅ QUI NASCE IL CALENDARIO
         if (page === "calendario") {
+
+            // Controlla se lo script è già stato aggiunto
             if (!document.getElementById('calendario-script')) {
                 const script = document.createElement('script');
                 script.id = 'calendario-script';
                 script.src = "js/calendario.js";
                 document.body.appendChild(script);
+            } else {
+                // Se lo script esiste già, basta richiamare la funzione loadCalendario
+                if (typeof loadCalendario === "function") {
+                    loadCalendario();
+                }
             }
         }
 

@@ -1,8 +1,33 @@
-// controllo se il calendario è già stato inizializzato
 if (!window.calendarioInizializzato) {
     window.calendarioInizializzato = true;
 
     let calendar;
+
+    function initCalendar(workDays) {
+        const calendarEl = document.getElementById("calendar");
+
+        // se calendar già esiste, distruggilo prima
+        if (calendar) {
+            calendar.destroy();
+        }
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'it',
+            height: 'auto',
+            events: workDays.map(day => ({
+                id: day.id,
+                title: day.status,
+                start: day.date,
+                allDay: true,
+                color: getColor(day.status)
+            })),
+            dateClick: info => openDayModal(info.dateStr),
+            eventClick: info => openDayModal(info.event.startStr, info.event)
+        });
+
+        calendar.render();
+    }
 
     async function loadCalendario() {
         const { data, error } = await supabaseClient
@@ -10,27 +35,14 @@ if (!window.calendarioInizializzato) {
             .select("*")
             .order("date");
 
-        if (error) {
-            console.error(error);
-            Swal.fire("Errore caricamento calendario");
-            return;
-        }
+        if (error) return console.error(error);
 
         initCalendar(data);
     }
 
-    function initCalendar(workDays) {
-        const events = workDays.map(day => ({
-            id: day.id,
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: {
-                note: day.note,
-                giustificativo: day.giustificativo
-            }
-        }));
+    // carica al primo click
+    loadCalendario();
+}    
 
         const calendarEl = document.getElementById("calendar2");
         if (!calendarEl) return;
@@ -56,7 +68,7 @@ if (!window.calendarioInizializzato) {
         });
 
         calendar.render();
-    }
+    
 
     function getColor(status) {
         switch (status) {
