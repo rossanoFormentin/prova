@@ -77,6 +77,18 @@ async function loadPage(page) {
             loadCalendario();
         }
     }
+
+     // Se pagina toastUi, carica script
+    if (page === "toastUi") {
+        if (!document.getElementById('toastUi-script')) {
+            const script = document.createElement('script');
+            script.id = 'toastUi-script';
+            script.src = "js/toastUi.js";
+            document.body.appendChild(script);
+        } else if (typeof loadCalendariotoastUi === "function") {
+            loadCalendariotoastUi();
+        }
+    }
 }
 
 // Delegazione eventi sidebar
