@@ -266,27 +266,51 @@ async function saveDay(date, status, note, giustificativo){
 
 // --- Aggiorna calendario ---
 function updateCalendarEvent(day) {
-    // Trova evento esistente per quella data
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
     if (existing) {
-        // Rimuovi l'evento esistente per far rieseguire eventContent
-        existing.remove();
-    }
+        // Aggiorna le proprietà dell'evento esistente
+        existing.setProp("title", day.status);
+        existing.setProp("color", getColor(day.status));
+        existing.setExtendedProp("note", day.note);
+        existing.setExtendedProp("giustificativo", day.giustificativo);
 
-    // Aggiungi l'evento aggiornato con tutte le proprietà
-    calendar.addEvent({
-        id: day.id,
-        title: day.status,
-        start: day.date,
-        allDay: true,
-        color: getColor(day.status),
-        extendedProps: {
-            note: day.note,
-            giustificativo: day.giustificativo
+        // Forza FullCalendar a rigenerare il contenuto custom
+        // Questo è il trucco: rimuovere e reinserire solo l'HTML interno
+        const eventEl = existing.el;
+        if (eventEl) {
+            const status = existing.title;
+            const note = existing.extendedProps.note || '';
+            const giustificativo = existing.extendedProps.giustificativo;
+
+            const showFlag =
+                giustificativo &&
+                ['smart','ferie','supplementare'].includes(status);
+
+            eventEl.innerHTML = `
+                <div class="workday-card status-${status}">
+                    <div class="wd-status">${getStatusLabel(status)}</div>
+                    ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                    ${note ? `<div class="wd-note">${note}</div>` : ''}
+                </div>
+            `;
         }
-    });
+    } else {
+        // Evento nuovo: aggiungilo normalmente
+        calendar.addEvent({
+            id: day.id,
+            title: day.status,
+            start: day.date,
+            allDay: true,
+            color: getColor(day.status),
+            extendedProps: {
+                note: day.note,
+                giustificativo: day.giustificativo
+            }
+        });
+    }
 }
+
 
 
 // --- Avvia calendario ---
