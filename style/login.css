@@ -48,40 +48,32 @@ body.auth-layout {
     box-sizing: border-box;
 }
 
-/* HEADER */
+/* Header */
 .app-header {
+    height: 70px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    background: var(--bg-card);
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 0 2rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.app-header h2 {
-    margin: 0;
-}
-
-.app-header p {
-    margin: 2px 0 0 0;
-    color: var(--text-muted);
-}
 
 /* BODY: SIDEBAR + CONTENUTO */
 .app-body {
     display: flex;
-    flex-grow: 1;
+    height: calc(100vh - 70px); /* Altezza totale meno l'header */
     overflow: hidden;
 }
 
 /* SIDEBAR */
 .app-sidebar {
-    width: 220px;
-    background: var(--bg-card);
-    padding: 1rem;
-    border-right: 1px solid rgba(0,0,0,0.05);
-    box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+    width: 260px;
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
 }
 
 .app-sidebar ul {
@@ -91,31 +83,16 @@ body.auth-layout {
 }
 
 .app-sidebar li {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.app-sidebar button {
-    width: 100%;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
 
-.app-sidebar button:hover {
-    background: var(--primary-hover);
-}
-
-/* CONTENUTO CENTRALE */
+/* Area Contenuto Dinamico */
 .app-content {
     flex-grow: 1;
     padding: 2rem;
-    background: var(--bg-page);
-    overflow-y: auto;
+    overflow-y: auto; /* Permette lo scroll solo qui */
+    background-color: #ffffff;
 }
 
 /* INPUT */
@@ -189,4 +166,35 @@ p.subtitle {
     color: var(--text-muted);
     font-size: 0.9rem;
     margin-bottom: 2rem;
+}
+
+/* Bottoni della Sidebar */
+.nav-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: #475569;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.nav-btn i {
+    font-size: 1.2rem;
+}
+
+.nav-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Stato Attivo (quando la pagina è selezionata) */
+.nav-btn.active {
+    background-color: #ecfdf5; /* Verde chiaro Supabase */
+    color: #059669; /* Verde scuro */
 }
