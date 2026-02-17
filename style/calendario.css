@@ -90,9 +90,14 @@
     color:#0d6efd;
 }
 
-.wd-note{
-    font-size:0.75rem;
-    color:#6c757d;
+.wd-note {
+    max-width: 100%;        /* Non sfora la cella */
+    white-space: normal;    /* Permette a testo lungo di andare a capo */
+    overflow: hidden;       /* Taglia eventuale eccedenza */
+    text-overflow: ellipsis; /* Mostra "..." se troppo lungo */
+    font-size: 0.85em;
+    margin-top: 2px;
+    color: #333;
 }
 
 .fc-day-today {
