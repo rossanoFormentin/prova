@@ -7,7 +7,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Mini router: carica pagine dinamiche nella app-content
 const routes = {
     //servizi: 'servizi.html',     
-    //altro: 'altro.html', 
+    presenze: 'pages/presenze.html', 
     calendario: 'pages/calendario.html'        
 };
 
@@ -91,11 +91,20 @@ async function loadPage(page) {
         document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
 
         // ✅ QUI NASCE IL CALENDARIO
-       if (page === "calendario") {
+        if (page === "calendario") {
             if (!document.getElementById('calendario-script')) {
                 const script = document.createElement('script');
                 script.id = 'calendario-script';
                 script.src = "js/calendario.js";
+                document.body.appendChild(script);
+            }
+        }
+
+        if (page === "presenze") {
+            if (!document.getElementById('presenze-script')) {
+                const script = document.createElement('script');
+                script.id = 'presenze-script';
+                script.src = "js/presenze.js";
                 document.body.appendChild(script);
             }
         }
