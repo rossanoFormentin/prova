@@ -91,17 +91,14 @@ async function loadPage(page) {
         document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
 
         // ✅ QUI NASCE IL CALENDARIO
-        if (page === "calendario") {
-        // Carica script calendario dinamicamente
-        const script = document.createElement('script');
-        script.src = "js/calendario.js";
-        document.body.appendChild(script);
-
-        // Inizializza il calendario dopo che lo script è caricato
-        script.onload = () => {
-            loadCalendario();
+       if (page === "calendario") {
+            if (!document.getElementById('calendario-script')) {
+                const script = document.createElement('script');
+                script.id = 'calendario-script';
+                script.src = "js/calendario.js";
+                document.body.appendChild(script);
+            }
         }
-    }
 
     } catch (err) {
         contentDiv.innerHTML = `<p>Errore nel caricamento della pagina.</p>`;
