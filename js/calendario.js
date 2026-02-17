@@ -247,34 +247,37 @@ async function saveDay(date, status, note, giustificativo){
     }
 }
 
-function updateCalendarEvent(day){
+function updateCalendarEvent(day) {
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
-    if(existing){
-        // Aggiorna le proprietà
+    if (existing) {
+        // Aggiorna proprietà evento
         existing.setProp("title", day.status);
         existing.setProp("color", getColor(day.status));
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Rimuove e riaggiunge per far rieseguire eventContent senza duplicati
-        const tempId = existing.id;
-        existing.remove();
+        // Forza il re-render dell'evento tramite setTimeout
+        setTimeout(() => {
+            const el = existing.el;
+            if(el){
+                const status = existing.title;
+                const note = existing.extendedProps.note || '';
+                const giustificativo = existing.extendedProps.giustificativo;
+                const showFlag = giustificativo && ['smart','ferie','supplementare'].includes(status);
 
-        calendar.addEvent({
-            id: tempId,
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: {
-                note: day.note,
-                giustificativo: day.giustificativo
+                el.innerHTML = `
+                    <div class="workday-card status-${status}">
+                        <div class="wd-status">${getStatusLabel(status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                    </div>
+                `;
             }
-        });
+        }, 0);
 
     } else {
-        // Nuovo evento
+        // Evento nuovo
         calendar.addEvent({
             id: day.id,
             title: day.status,
@@ -288,6 +291,7 @@ function updateCalendarEvent(day){
         });
     }
 }
+
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
