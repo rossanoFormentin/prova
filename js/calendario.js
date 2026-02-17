@@ -269,34 +269,16 @@ function updateCalendarEvent(day) {
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
     if (existing) {
-        // Aggiorna le proprietà dell'evento esistente
+        // Aggiorna tutte le proprietà
         existing.setProp("title", day.status);
         existing.setProp("color", getColor(day.status));
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Forza FullCalendar a rigenerare il contenuto custom
-        // Questo è il trucco: rimuovere e reinserire solo l'HTML interno
-        const eventEl = existing.el;
-        if (eventEl) {
-            const status = existing.title;
-            const note = existing.extendedProps.note || '';
-            const giustificativo = existing.extendedProps.giustificativo;
-
-            const showFlag =
-                giustificativo &&
-                ['smart','ferie','supplementare'].includes(status);
-
-            eventEl.innerHTML = `
-                <div class="workday-card status-${status}">
-                    <div class="wd-status">${getStatusLabel(status)}</div>
-                    ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                    ${note ? `<div class="wd-note">${note}</div>` : ''}
-                </div>
-            `;
-        }
+        // Rerender degli eventi: forza FullCalendar a rieseguire eventContent
+        calendar.rerenderEvents();
     } else {
-        // Evento nuovo: aggiungilo normalmente
+        // Evento nuovo
         calendar.addEvent({
             id: day.id,
             title: day.status,
@@ -310,6 +292,7 @@ function updateCalendarEvent(day) {
         });
     }
 }
+
 
 
 
