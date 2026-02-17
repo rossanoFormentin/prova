@@ -271,22 +271,47 @@ function updateCalendarEvent(day) {
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
     if (existing) {
-        // Rimuove l’evento esistente per far rieseguire eventContent
-        existing.remove();
-    }
+        // Aggiorna proprietà dell'evento
+        existing.setProp("title", day.status);
+        existing.setProp("color", getColor(day.status));
+        existing.setExtendedProp("note", day.note);
+        existing.setExtendedProp("giustificativo", day.giustificativo);
 
-    // Aggiunge evento aggiornato con stesso ID
-    calendar.addEvent({
-        id: day.id,  // mantiene lo stesso ID per evitare duplicati
-        title: day.status,
-        start: day.date,
-        allDay: true,
-        color: getColor(day.status),
-        extendedProps: {
-            note: day.note,
-            giustificativo: day.giustificativo
-        }
-    });
+        // Forza il refresh del contenuto custom usando ricalcolo via requestAnimationFrame
+        requestAnimationFrame(() => {
+            const el = existing.el;
+            if(el){
+                const status = existing.title;
+                const note = existing.extendedProps.note || '';
+                const giustificativo = existing.extendedProps.giustificativo;
+                const showFlag =
+                    giustificativo &&
+                    ['smart','ferie','supplementare'].includes(status);
+
+                el.innerHTML = `
+                    <div class="workday-card status-${status}">
+                        <div class="wd-status">${getStatusLabel(status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                    </div>
+                `;
+            }
+        });
+
+    } else {
+        // Evento nuovo
+        calendar.addEvent({
+            id: day.id,
+            title: day.status,
+            start: day.date,
+            allDay: true,
+            color: getColor(day.status),
+            extendedProps: {
+                note: day.note,
+                giustificativo: day.giustificativo
+            }
+        });
+    }
 }
 
 
