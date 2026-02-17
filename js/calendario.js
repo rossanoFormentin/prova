@@ -2,7 +2,7 @@ let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
 
-// --- Carica i dati dal DB ---
+// -------------------- Carica dati dal DB --------------------
 async function loadCalendario() {
     const { data, error } = await supabaseClient
         .from("work_days")
@@ -16,7 +16,7 @@ async function loadCalendario() {
     setupLegendFilter();
 }
 
-// --- Render calendario ---
+// -------------------- Render calendario --------------------
 function renderCalendar(workDays) {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -31,28 +31,27 @@ function renderCalendar(workDays) {
         weekends: false,
         showNonCurrentDates: false,
         fixedWeekCount: false,
+
         headerToolbar: {
             left: 'myPrev',
             center: 'title',
             right: 'myNext today'
         },
         customButtons: {
-            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button']},
-            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button']  }
+            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button'] },
+            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button'] }
         },
+
         events: getFilteredEvents(),
+
         dateClick: info => openDayModal(info.dateStr),
         eventClick: info => openDayModal(info.event.startStr, info.event),
 
-        eventContent: function(arg){
-
+        eventContent: function(arg) {
             const status = arg.event.title;
             const note = arg.event.extendedProps.note || '';
             const giustificativo = arg.event.extendedProps.giustificativo;
-
-            const showFlag =
-                giustificativo &&
-                ['smart','ferie','supplementare'].includes(status);
+            const showFlag = giustificativo && ['smart', 'ferie', 'supplementare'].includes(status);
 
             return {
                 html: `
@@ -64,7 +63,7 @@ function renderCalendar(workDays) {
                 `
             };
         },
-       
+
         dayCellClassNames: function(arg) {
             const todayStr = new Date().toDateString();
             if(arg.date.toDateString() === todayStr){
@@ -78,34 +77,27 @@ function renderCalendar(workDays) {
             return [];
         },
 
-
         eventDidMount: function(info){
-
             const color = getBGColor(info.event.title);
-
             info.el.style.backgroundColor = color;
             info.el.style.border = "none";
             info.el.style.color = "#000";
             info.el.style.boxShadow = "none";
 
-            // tooltip
+            // Tooltip
             let text = info.event.extendedProps.note || '';
-
             if(info.event.extendedProps.giustificativo &&
-            ['smart','ferie','supplementare'].includes(info.event.title)){
+                ['smart','ferie','supplementare'].includes(info.event.title)) {
                 text = '✅ Giustificativo' + (text ? ' - ' + text : '');
             }
-
             if(text) info.el.setAttribute('title', text);
         }
-
-
-
     });
 
     calendar.render();
 }
 
+// -------------------- Status label --------------------
 function getStatusLabel(status){
     switch(status){
         case "presenza": return "Presenza";
@@ -118,7 +110,7 @@ function getStatusLabel(status){
     }
 }
 
-// --- Eventi filtrati secondo legenda ---
+// -------------------- Eventi filtrati secondo legenda --------------------
 function getFilteredEvents() {
     let filtered = allWorkDays;
 
@@ -144,24 +136,18 @@ function getFilteredEvents() {
     return [...bgEvents, ...events];
 }
 
-// --- Setup legenda cliccabile come filtro ---
+// -------------------- Setup legenda cliccabile --------------------
 function setupLegendFilter() {
-    // Filtra cliccando sulla legenda
     document.querySelectorAll('.legend-item').forEach(item => {
         item.addEventListener('click', () => {
             const status = item.dataset.status;
-            if(activeStatusFilter === status){
-                activeStatusFilter = null; // reset filtro
-            } else {
-                activeStatusFilter = status;
-            }
+            activeStatusFilter = (activeStatusFilter === status) ? null : status;
             calendar.removeAllEvents();
             calendar.addEventSource(getFilteredEvents());
             highlightLegend();
         });
     });
 
-    // Bottone “Mostra tutti”
     const resetBtn = document.getElementById('reset-legend');
     if(resetBtn){
         resetBtn.addEventListener('click', () => {
@@ -173,18 +159,13 @@ function setupLegendFilter() {
     }
 }
 
-// Evidenzia legenda selezionata
 function highlightLegend(){
     document.querySelectorAll('.legend-item').forEach(item => {
-        if(item.dataset.status === activeStatusFilter){
-            item.style.border = '2px solid black';
-        } else {
-            item.style.border = 'none';
-        }
+        item.style.border = (item.dataset.status === activeStatusFilter) ? '2px solid black' : 'none';
     });
 }
 
-// --- Colori sfondo ---
+// -------------------- Colori sfondo e eventi --------------------
 function getBGColor(status) {
     switch(status){
         case "presenza": return "#d1e7dd";
@@ -197,9 +178,6 @@ function getBGColor(status) {
     }
 }
 
-
-
-// --- Colori eventi ---
 function getColor(status) {
     switch(status){
         case "presenza": return "#198754";
@@ -212,7 +190,7 @@ function getColor(status) {
     }
 }
 
-// --- Modal per modificare giorno ---
+// -------------------- Modal e salvataggio --------------------
 async function openDayModal(date, event=null){
     const result = await Swal.fire({
         title: `Giorno ${date}`,
@@ -243,7 +221,7 @@ async function openDayModal(date, event=null){
 
     if(!result.isConfirmed) return;
 
-    saveDay(
+    await saveDay(
         date,
         document.getElementById("status").value,
         document.getElementById("note").value,
@@ -251,55 +229,52 @@ async function openDayModal(date, event=null){
     );
 }
 
-// --- Salva giorno nel DB ---
+// -------------------- Salvataggio e aggiornamento evento --------------------
 async function saveDay(date, status, note, giustificativo){
-    const { data, error } = await supabaseClient
-        .from("work_days")
-        .upsert({ date, status, note, giustificativo }, { onConflict: "date" })
-        .select()
-        .single();
+    try {
+        const { data, error } = await supabaseClient
+            .from("work_days")
+            .upsert({ date, status, note, giustificativo }, { onConflict: "date" })
+            .select()
+            .single();
 
-    if(error) return console.error(error);
+        if(error) return console.error(error);
 
-    updateCalendarEvent(data);
+        updateCalendarEvent(data);
+
+    } catch(err) {
+        console.error(err);
+    }
 }
 
-// --- Aggiorna calendario ---
-// --- Aggiorna evento nel calendario senza duplicati ---
-function updateCalendarEvent(day) {
-    // Trova evento esistente
+function updateCalendarEvent(day){
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
 
-    if (existing) {
-        // Aggiorna proprietà dell'evento
+    if(existing){
+        // Aggiorna le proprietà
         existing.setProp("title", day.status);
         existing.setProp("color", getColor(day.status));
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Forza il refresh del contenuto custom usando ricalcolo via requestAnimationFrame
-        requestAnimationFrame(() => {
-            const el = existing.el;
-            if(el){
-                const status = existing.title;
-                const note = existing.extendedProps.note || '';
-                const giustificativo = existing.extendedProps.giustificativo;
-                const showFlag =
-                    giustificativo &&
-                    ['smart','ferie','supplementare'].includes(status);
+        // Rimuove e riaggiunge per far rieseguire eventContent senza duplicati
+        const tempId = existing.id;
+        existing.remove();
 
-                el.innerHTML = `
-                    <div class="workday-card status-${status}">
-                        <div class="wd-status">${getStatusLabel(status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `;
+        calendar.addEvent({
+            id: tempId,
+            title: day.status,
+            start: day.date,
+            allDay: true,
+            color: getColor(day.status),
+            extendedProps: {
+                note: day.note,
+                giustificativo: day.giustificativo
             }
         });
 
     } else {
-        // Evento nuovo
+        // Nuovo evento
         calendar.addEvent({
             id: day.id,
             title: day.status,
@@ -314,8 +289,5 @@ function updateCalendarEvent(day) {
     }
 }
 
-
-
-
-// --- Avvia calendario ---
+// -------------------- Avvia calendario --------------------
 loadCalendario();
