@@ -84,6 +84,28 @@ function renderCalendar(workDays) {
             }
             return [];
         }
+
+        dayCellDidMount: function(info) {
+
+            const dateStr = info.date.toISOString().slice(0,10);
+
+            const day = workDays.find(d => d.date === dateStr);
+            if(!day) return;
+
+            info.el.style.backgroundColor = getBGColor(day.status);
+        }
+
+        eventDidMount: function(info){
+
+            const color = getBGColor(info.event.title);
+
+            info.el.style.backgroundColor = color;
+            info.el.style.border = "none";
+            info.el.style.color = "#000";
+            info.el.style.boxShadow = "none";
+        }
+
+
     });
 
     calendar.render();
@@ -168,27 +190,7 @@ function getBGColor(status) {
     }
 }
 
-dayCellDidMount: function(info) {
 
-    const dateStr = info.date.toISOString().slice(0,10);
-
-    const day = workDays.find(d => d.date === dateStr);
-    if(!day) return;
-
-    info.el.style.backgroundColor = getBGColor(day.status);
-}
-
-eventDidMount: function(info){
-
-    const color = getBGColor(info.event.title);
-
-    info.el.style.backgroundColor = color;
-    info.el.style.border = "none";
-    info.el.style.color = "#000";
-    info.el.style.boxShadow = "none";
-}
-
- 
 
 // --- Colori eventi ---
 function getColor(status) {
