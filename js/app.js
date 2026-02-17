@@ -54,7 +54,7 @@ async function checkUser() {
     
         document.body.classList.remove("auth-layout");
     
-        loadPage('servizi'); // carica la home page servizi di default
+    
     } else {
         authSection.classList.remove('hidden');
         appSection.classList.add('hidden');
