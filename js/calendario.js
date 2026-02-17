@@ -18,7 +18,6 @@ if (!window.calendarioInizializzato) {
         const calendarEl = document.getElementById("calendar");
         if (!calendarEl) return;
 
-        // distruggi se esiste già
         if (calendar) calendar.destroy();
 
         calendar = new FullCalendar.Calendar(calendarEl, {
@@ -47,16 +46,10 @@ if (!window.calendarioInizializzato) {
             })),
             dateClick: info => openDayModal(info.dateStr),
             eventClick: info => openDayModal(info.event.startStr, info.event),
-
-            // TOOLTIP con note e giustificativo
             eventDidMount: info => {
                 let text = info.event.extendedProps.note || '';
-                if (info.event.extendedProps.giustificativo) {
-                    text = '✅ ' + text;
-                }
-                if(text) {
-                    info.el.setAttribute('title', text);
-                }
+                if (info.event.extendedProps.giustificativo) text = '✅ ' + text;
+                if (text) info.el.setAttribute('title', text);
             }
         });
 
@@ -144,6 +137,5 @@ if (!window.calendarioInizializzato) {
         }
     }
 
-    // CARICA calendario al primo click
     loadCalendario();
 }

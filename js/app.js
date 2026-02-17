@@ -74,7 +74,7 @@ async function loadPage(page) {
             script.src = "js/calendario.js";
             document.body.appendChild(script);
         } else if (typeof loadCalendario === "function") {
-            loadCalendario(); // ricarica calendario se script già presente
+            loadCalendario();
         }
     }
 }
