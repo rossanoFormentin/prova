@@ -28,12 +28,13 @@ function renderCalendar(workDays) {
         initialView: 'dayGridMonth',
         locale: 'it',
         height: 'auto',
-        weekends: false,                // nasconde sabato e domenica
-        showNonCurrentDates: false,     // solo giorni del mese corrente
+        weekends: false,
+        showNonCurrentDates: false,
         fixedWeekCount: false,
         headerToolbar: {
-            left: 'title',
-            right: 'myPrev,myNext today'
+            left: 'myPrev',
+            center: 'title',
+            right: 'myNext today'
         },
         customButtons: {
             myPrev: { text: '← Mese precedente', click: () => calendar.prev() },
@@ -42,16 +43,39 @@ function renderCalendar(workDays) {
         events: getFilteredEvents(),
         dateClick: info => openDayModal(info.dateStr),
         eventClick: info => openDayModal(info.event.startStr, info.event),
+
+        eventContent: function(arg) {
+            const status = arg.event.title;
+            const giustificativo = arg.event.extendedProps.giustificativo;
+            const note = arg.event.extendedProps.note || '';
+
+            let innerHtml = `<div>${status}</div>`;
+
+            // Mostra giustificativo solo per smart, ferie o supplementare
+            if(giustificativo && ['smart','ferie','supplementare'].includes(status)){
+                innerHtml += `<div style="font-size:0.8em;color:#0d6efd;">✅ Giustificativo</div>`;
+            }
+
+            if(note){
+                innerHtml += `<div style="font-size:0.7em;color:#6c757d;">${note}</div>`;
+            }
+
+            return { html: innerHtml };
+        },
+
         eventDidMount: info => {
             let text = info.event.extendedProps.note || '';
-            if (info.event.extendedProps.giustificativo) text = '✅ ' + text;
-            if (text) info.el.setAttribute('title', text);
+            if (info.event.extendedProps.giustificativo &&
+                ['smart','ferie','supplementare'].includes(info.event.title)) {
+                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
+            }
+            if(text) info.el.setAttribute('title', text);
         },
+
         dayCellClassNames: function(arg) {
-            // Giorno corrente con bordo colorato secondo status
             const todayStr = new Date().toDateString();
-            if (arg.date.toDateString() === todayStr) {
-                const todayEvent = allWorkDays.find(d => d.date === arg.date.toISOString().slice(0,10));
+            if(arg.date.toDateString() === todayStr){
+                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
                 if(todayEvent){
                     return ['current-day-border', `current-day-${todayEvent.status}`];
                 } else {
