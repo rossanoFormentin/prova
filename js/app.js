@@ -6,8 +6,9 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Mini router: carica pagine dinamiche nella app-content
 const routes = {
-    servizi: 'prova.html',      // pagina servizi
-    altro: 'altro.html',        // altra pagina
+    servizi: 'servizi.html',     
+    altro: 'altro.html', 
+    calendario: 'calendario.html'        
 };
 
 // Selettori DOM
@@ -68,69 +69,40 @@ document.getElementById('btnLogout').onclick = async () => {
     checkUser();
 };
 
-// 5.Caricamento Dinamico pagina html
-async function loadSubPageServizi() {
-    try {
-        const response = await fetch('prova.html');
-        const html = await response.text();
-        document.getElementById('dynamic-content').innerHTML = html;
-    } catch (err) {
-        console.error("Errore nel caricamento della pagina:", err);
-    }
-}
+// --- LOGICA DI NAVIGAZIONE ---
 
-// Avvio: controlla se l'utente è già loggato
-checkUser();
-
-
-
-// Funzione generica per caricare qualsiasi pagina
 async function loadPage(page) {
     const url = routes[page];
+    const contentDiv = document.getElementById('dynamic-content');
+
     if (!url) {
-        document.getElementById('dynamic-content').innerHTML = `<p>Pagina non trovata: ${page}</p>`;
+        contentDiv.innerHTML = `<p>Pagina non trovata: ${page}</p>`;
         return;
     }
 
     try {
         const response = await fetch(url);
+        if (!response.ok) throw new Error("Errore nel caricamento");
         const html = await response.text();
-        document.getElementById('dynamic-content').innerHTML = html;
+        contentDiv.innerHTML = html;
+
+        // Opzionale: Evidenzia il bottone attivo
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+
     } catch (err) {
-        console.error("Errore nel caricamento della pagina:", err);
-        document.getElementById('dynamic-content').innerHTML = `<p>Errore nel caricamento della pagina.</p>`;
+        contentDiv.innerHTML = `<p>Errore nel caricamento della pagina.</p>`;
     }
 }
 
-// Listener pulsanti sidebar
-document.querySelectorAll('.app-sidebar button').forEach(btn => {
-    btn.addEventListener('click', () => {
+// Delegazione degli eventi per i bottoni della sidebar
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+        const btn = e.target.classList.contains('nav-btn') ? e.target : e.target.closest('.nav-btn');
         const page = btn.dataset.page;
         loadPage(page);
-    });
+    }
 });
 
-window.loadSubPageServizi = function() {
-  const content = document.getElementById("dynamic-content");
-
-  // Inserisce il contenuto del calendario
-  content.innerHTML = `
-    <h3>Calendario Presenze</h3>
-    <div id="calendar-container">
-      <input type="text" id="monthPicker" class="form-control mb-3" placeholder="Seleziona mese">
-      <div id="calendar"></div>
-    </div>
-  `;
-
-  // Carica dinamicamente il file prova.js
-  const script = document.createElement("script");
-  script.src = "js/prova.js";
-  script.onload = () => console.log("prova.js caricato correttamente");
-  content.appendChild(script);
-};
-
-window.loadSubPageAltro = function() {
-  const content = document.getElementById("dynamic-content");
-  content.innerHTML = `<h3>Altro</h3><p>Contenuto extra...</p>`;
-};
-
+// Esegui il controllo sessione all'avvio del browser
+checkUser();
