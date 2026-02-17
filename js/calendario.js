@@ -53,11 +53,11 @@ function renderCalendar(workDays) {
 
             // Mostra giustificativo solo per smart, ferie o supplementare
             if(giustificativo && ['smart','ferie','supplementare'].includes(status)){
-                innerHtml += `<div style="font-size:0.8em;color:#0d6efd;">✅ Giustificativo</div>`;
+                innerHtml += `<div style="font-size:0.8em;">✅ Giustificativo</div>`;
             }
 
             if(note){
-                innerHtml += `<div style="font-size:0.7em;color:#6c757d;">${note}</div>`;
+                innerHtml += `<div style="font-size:0.7em;">${note}</div>`;
             }
 
             return { html: innerHtml };
@@ -167,6 +167,17 @@ function getBGColor(status) {
         default: return "";
     }
 }
+
+dayCellDidMount: function(info) {
+
+    const dateStr = info.date.toISOString().slice(0,10);
+
+    const day = workDays.find(d => d.date === dateStr);
+    if(!day) return;
+
+    info.el.style.backgroundColor = getBGColor(day.status);
+}
+ 
 
 // --- Colori eventi ---
 function getColor(status) {
