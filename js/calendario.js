@@ -1,5 +1,6 @@
 let calendar;
 let allWorkDays = [];
+let activeStatusFilter = null; // legenda/filtro attivo
 
 // --- Carica i dati dal DB ---
 async function loadCalendario() {
@@ -12,36 +13,7 @@ async function loadCalendario() {
 
     allWorkDays = data;
     renderCalendar(allWorkDays);
-    setupFilters();
-}
-
-
-
-// --- Eventi filtrati in base ai checkbox ---
-function getFilteredEvents() {
-    const checkedStatuses = Array.from(document.querySelectorAll('#calendar-filters input:checked'))
-        .map(cb => cb.value);
-
-    const bgEvents = allWorkDays
-        .filter(d => checkedStatuses.includes(d.status))
-        .map(d => ({
-            start: d.date,
-            display: 'background',
-            color: getBGColor(d.status)
-        }));
-
-    const events = allWorkDays
-        .filter(d => checkedStatuses.includes(d.status))
-        .map(d => ({
-            id: d.id,
-            title: d.status,
-            start: d.date,
-            allDay: true,
-            color: getColor(d.status),
-            extendedProps: { note: d.note, giustificativo: d.giustificativo }
-        }));
-
-    return [...bgEvents, ...events];
+    setupLegendFilter();
 }
 
 // --- Render calendario ---
@@ -56,8 +28,8 @@ function renderCalendar(workDays) {
         initialView: 'dayGridMonth',
         locale: 'it',
         height: 'auto',
-        weekends: false,
-        showNonCurrentDates: false,
+        weekends: false,                // nasconde sabato e domenica
+        showNonCurrentDates: false,     // solo giorni del mese corrente
         fixedWeekCount: false,
         headerToolbar: {
             left: 'title',
@@ -74,19 +46,75 @@ function renderCalendar(workDays) {
             let text = info.event.extendedProps.note || '';
             if (info.event.extendedProps.giustificativo) text = '✅ ' + text;
             if (text) info.el.setAttribute('title', text);
+        },
+        dayCellClassNames: function(arg) {
+            // Giorno corrente con bordo colorato secondo status
+            const todayStr = new Date().toDateString();
+            if (arg.date.toDateString() === todayStr) {
+                const todayEvent = allWorkDays.find(d => d.date === arg.date.toISOString().slice(0,10));
+                if(todayEvent){
+                    return ['current-day-border', `current-day-${todayEvent.status}`];
+                } else {
+                    return ['current-day-border', 'current-day-default'];
+                }
+            }
+            return [];
         }
     });
 
     calendar.render();
 }
 
-// --- Setup filtri dinamici ---
-function setupFilters() {
-    document.querySelectorAll('#calendar-filters input').forEach(cb => {
-        cb.addEventListener('change', () => {
+// --- Eventi filtrati secondo legenda ---
+function getFilteredEvents() {
+    let filtered = allWorkDays;
+
+    if (activeStatusFilter) {
+        filtered = filtered.filter(d => d.status === activeStatusFilter);
+    }
+
+    const bgEvents = filtered.map(d => ({
+        start: d.date,
+        display: 'background',
+        color: getBGColor(d.status)
+    }));
+
+    const events = filtered.map(d => ({
+        id: d.id,
+        title: d.status,
+        start: d.date,
+        allDay: true,
+        color: getColor(d.status),
+        extendedProps: { note: d.note, giustificativo: d.giustificativo }
+    }));
+
+    return [...bgEvents, ...events];
+}
+
+// --- Setup legenda cliccabile come filtro ---
+function setupLegendFilter() {
+    document.querySelectorAll('.legend-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const status = item.dataset.status;
+            if(activeStatusFilter === status){
+                activeStatusFilter = null; // reset filtro
+            } else {
+                activeStatusFilter = status;
+            }
             calendar.removeAllEvents();
             calendar.addEventSource(getFilteredEvents());
+            highlightLegend();
         });
+    });
+}
+
+function highlightLegend(){
+    document.querySelectorAll('.legend-item').forEach(item => {
+        if(item.dataset.status === activeStatusFilter){
+            item.style.border = '2px solid black';
+        } else {
+            item.style.border = 'none';
+        }
     });
 }
 
@@ -116,8 +144,8 @@ function getColor(status) {
     }
 }
 
-// --- Modal per aprire/modificare un giorno ---
-async function openDayModal(date, event = null) {
+// --- Modal per modificare giorno ---
+async function openDayModal(date, event=null){
     const result = await Swal.fire({
         title: `Giorno ${date}`,
         html: `
@@ -156,7 +184,7 @@ async function openDayModal(date, event = null) {
 }
 
 // --- Salva giorno nel DB ---
-async function saveDay(date, status, note, giustificativo) {
+async function saveDay(date, status, note, giustificativo){
     const { data, error } = await supabaseClient
         .from("work_days")
         .upsert({ date, status, note, giustificativo }, { onConflict: "date" })
@@ -168,7 +196,7 @@ async function saveDay(date, status, note, giustificativo) {
     updateCalendarEvent(data);
 }
 
-// --- Aggiorna il calendario dopo salvataggio ---
+// --- Aggiorna calendario ---
 function updateCalendarEvent(day){
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
     if(existing){
@@ -182,10 +210,7 @@ function updateCalendarEvent(day){
             start: day.date,
             allDay: true,
             color: getColor(day.status),
-            extendedProps: {
-                note: day.note,
-                giustificativo: day.giustificativo
-            }
+            extendedProps: { note: day.note, giustificativo: day.giustificativo }
         });
     }
 }

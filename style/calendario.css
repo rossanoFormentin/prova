@@ -1,4 +1,13 @@
-.fc-day-today {
-    border: 3px solid #0d6efd; /* blu intenso */
+.current-day-border {
+    border: 3px solid;
     border-radius: 5px;
 }
+
+/* Colori secondo status */
+.current-day-presenza { border-color: #198754; }
+.current-day-smart { border-color: #0d6efd; }
+.current-day-ferie { border-color: #ffc107; }
+.current-day-festivita { border-color: #6c757d; }
+.current-day-scoperto { border-color: #dc3545; }
+.current-day-supplementare { border-color: #6610f2; }
+.current-day-default { border-color: #0d6efd; } /* se nessun evento */
