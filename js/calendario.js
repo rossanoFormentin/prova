@@ -47,10 +47,15 @@ if (!window.calendarioInizializzato) {
             })),
             dateClick: info => openDayModal(info.dateStr),
             eventClick: info => openDayModal(info.event.startStr, info.event),
+
+            // TOOLTIP con note e giustificativo
             eventDidMount: info => {
-                // aggiunge tooltip con note
-                if(info.event.extendedProps.note) {
-                    info.el.setAttribute('title', info.event.extendedProps.note);
+                let text = info.event.extendedProps.note || '';
+                if (info.event.extendedProps.giustificativo) {
+                    text = '✅ ' + text;
+                }
+                if(text) {
+                    info.el.setAttribute('title', text);
                 }
             }
         });
@@ -90,6 +95,8 @@ if (!window.calendarioInizializzato) {
             didOpen: () => {
                 if(event){
                     document.getElementById("status").value = event.title;
+                    document.getElementById("note").value = event.extendedProps.note || '';
+                    document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
                 }
             }
         });
@@ -121,15 +128,22 @@ if (!window.calendarioInizializzato) {
         if(existing){
             existing.setProp("title", day.status);
             existing.setProp("color", getColor(day.status));
+            existing.setExtendedProp("note", day.note);
+            existing.setExtendedProp("giustificativo", day.giustificativo);
         } else {
             calendar.addEvent({
                 title: day.status,
                 start: day.date,
                 allDay: true,
-                color: getColor(day.status)
+                color: getColor(day.status),
+                extendedProps: {
+                    note: day.note,
+                    giustificativo: day.giustificativo
+                }
             });
         }
     }
 
+    // CARICA calendario al primo click
     loadCalendario();
 }
