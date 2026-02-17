@@ -36,6 +36,11 @@ if (!window.calendarioInizializzato) {
         if (!calendarEl) return;
 
         calendar = new FullCalendar.Calendar(calendarEl, {
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
             initialView: "dayGridMonth",
             locale: "it",
             height: "auto",
