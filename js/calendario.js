@@ -36,14 +36,10 @@ if (!window.calendarioInizializzato) {
         if (!calendarEl) return;
 
         calendar = new FullCalendar.Calendar(calendarEl, {
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
+            
             buttonText: {
-                prev: '<- Mese precedente',
-                next: 'Mese successivo ->',
+                prev: '< Mese precedente',
+                next: 'Mese successivo >',
                 today: 'Oggi',
                 month: 'Mese',
                 week: 'Settimana',
