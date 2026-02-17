@@ -63,7 +63,7 @@ function renderCalendar(workDays) {
                     </div>
                 `
             };
-        }
+        },
        
 
         
