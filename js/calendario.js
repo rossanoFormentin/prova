@@ -265,23 +265,29 @@ async function saveDay(date, status, note, giustificativo){
 }
 
 // --- Aggiorna calendario ---
-function updateCalendarEvent(day){
+function updateCalendarEvent(day) {
+    // Trova evento esistente per quella data
     const existing = calendar.getEvents().find(e => e.startStr === day.date);
-    if(existing){
-        existing.setProp("title", day.status);
-        existing.setProp("color", getColor(day.status));
-        existing.setExtendedProp("note", day.note);
-        existing.setExtendedProp("giustificativo", day.giustificativo);
-    } else {
-        calendar.addEvent({
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: { note: day.note, giustificativo: day.giustificativo }
-        });
+
+    if (existing) {
+        // Rimuovi l'evento esistente per far rieseguire eventContent
+        existing.remove();
     }
+
+    // Aggiungi l'evento aggiornato con tutte le proprietà
+    calendar.addEvent({
+        id: day.id,
+        title: day.status,
+        start: day.date,
+        allDay: true,
+        color: getColor(day.status),
+        extendedProps: {
+            note: day.note,
+            giustificativo: day.giustificativo
+        }
+    });
 }
+
 
 // --- Avvia calendario ---
 loadCalendario();
