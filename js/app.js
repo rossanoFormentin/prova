@@ -150,10 +150,7 @@ function initCalendar(workDays) {
 
 async function loadCalendario() {
 
-    const { data, error } = await supabaseClient
-        .from("work_days")
-        .select("*")
-        .order("date");
+    const {data,error}=await supabaseClient.from("work_days").select("*");
 
     if (error) {
         console.error(error);
