@@ -10,7 +10,7 @@ verificaPresenzaProssimoGiornoLavorativo();
     const select = document.getElementById('selectTab');
     select.innerHTML = '<option value="">-- Seleziona --</option>'; // reset
 
-    const { data, error } = await supabase.from('tabs').select('*');
+    const { data, error } = await supabaseClient.from('tabs').select('*');
     if (error) {
       console.error('Errore nel caricamento dei dati:', error);
       return;
@@ -40,7 +40,7 @@ verificaPresenzaProssimoGiornoLavorativo();
     return; // esce senza fare nulla
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('tabs')
     .delete()
     .eq('id', idTabDaEliminare)
@@ -76,7 +76,7 @@ verificaPresenzaProssimoGiornoLavorativo();
     const select = document.getElementById('selectTabEdit');
     select.innerHTML = '<option value="">-- Seleziona --</option>';
 
-    const { data, error } = await supabase.from('tabs').select('*');
+    const { data, error } = await supabaseClient.from('tabs').select('*');
 
     if (error) {
       alert('Errore nel caricamento');
@@ -113,7 +113,7 @@ verificaPresenzaProssimoGiornoLavorativo();
       return;
     }
 
-    const { error } = await supabase.from('tabs').update({ name: nuovoNome }).eq('id', id);
+    const { error } = await supabaseClient.from('tabs').update({ name: nuovoNome }).eq('id', id);
 
     if (error) {
       alert('Errore nella modifica.');
@@ -139,7 +139,7 @@ verificaPresenzaProssimoGiornoLavorativo();
         }
 
         // Inserisce il dato nella tabella "tabs"
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('tabs')
             .insert([{ name: input }]);
 		// ricavo l'id del tab inserito	
@@ -192,7 +192,7 @@ verificaPresenzaProssimoGiornoLavorativo();
         }
 
         // Inserisce il dato nella tabella "tabs"
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('sections')
             .insert([
               {
@@ -240,7 +240,7 @@ const modificaSezModal = document.getElementById('modificaSezModal');
     const selectSez = document.getElementById('selectSezEdit');
     selectSez.innerHTML = '<option value="">-- Seleziona --</option>';
 	
-    const { data, error } = await supabase.from('sections').select('*').eq('tab_id',dataTabId ).order('name', { ascending: true });
+    const { data, error } = await supabaseClient.from('sections').select('*').eq('tab_id',dataTabId ).order('name', { ascending: true });
 
     if (error) {
       alert('Errore nel caricamento');
@@ -279,7 +279,7 @@ const modificaSezModal = document.getElementById('modificaSezModal');
       return;
     }
 
-    const { error } = await supabase.from('sections').update({ name: nuovoNome }).eq('id', id);
+    const { error } = await supabaseClient.from('sections').update({ name: nuovoNome }).eq('id', id);
 
     if (error) {
       alert('Errore nella modifica.');
@@ -317,7 +317,7 @@ const modificaSezModal = document.getElementById('modificaSezModal');
 
 //console.log('#####dataTabIdElimina ',dataTabIdElimina)
 
-    const { data, error } = await supabase.from('sections').select('*').eq('tab_id', dataTabIdElimina).order('name', { ascending: true });
+    const { data, error } = await supabaseClient.from('sections').select('*').eq('tab_id', dataTabIdElimina).order('name', { ascending: true });
 	
 console.log('#####data ',data)
     
@@ -350,7 +350,7 @@ console.log('#####data ',data)
     return; // esce senza fare nulla
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('sections')
     .delete()
     .eq('id', idSezDaEliminare)
@@ -405,7 +405,7 @@ console.log('#####data ',data)
         }
 
         // Inserisce il dato nella tabella "tabs"
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('links')
             .insert([
               {
@@ -478,7 +478,7 @@ console.log('#####data ',data)
   const idSezLinkModifica =document.getElementById('sezIdHidden').value;
   const idLinkModifica =document.getElementById('linkIdHidden').value;
   
-  const {data, error } = await supabase
+  const {data, error } = await supabaseClient
     .from('links')
     .update({'url':urlLinkModifica ,'name':nameLinkModifica, 'descrizione': descLinkModifica})
     .eq('section_id', idSezLinkModifica)
@@ -549,13 +549,13 @@ console.log('#####data ',data)
     const modal = bootstrap.Modal.getInstance(document.getElementById('eliminaLinkModal'));
     modal.hide();
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('links')
       .delete()
       .eq('id', idLinkElimina);
 
     if (error) {
-      console.error('Errore Supabase:', error);
+      console.error('Errore supabaseClient:', error);
     }
 
     createTabs(primaSezione?.tab_id, idSezLinkElimina);
@@ -571,7 +571,7 @@ console.log('#####data ',data)
 
   // Funzione per salvare un link
   async function salvaLink(id, name, url) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
           .from("links")
           .insert([{ id: idSez, name: name, url_link: url }]);
       if (error) {
@@ -585,7 +585,7 @@ console.log('#####data ',data)
 
   // Funzione per recuperare tutti i link
   async function recuperaLinksSez(idSez) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
           .from("links")
           .select("*")
           .eq('section_id', idSez.id);
@@ -601,7 +601,7 @@ console.log('#####data ',data)
 
 // Funzione per recuperare i dati dalla tabella sections
     async function fetchSectionById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('sections')
             .select('*')
 			.eq('id', id)
@@ -616,9 +616,9 @@ console.log('#####data ',data)
 	   return data;
     }
 	
-// Funzione per recuperare i nomi delle tab dalla tabella Supabase
+// Funzione per recuperare i nomi delle tab dalla tabella supabaseClient
     async function fetchTabNames() {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('tabs')
             .select('*');
         if (error) {
@@ -631,7 +631,7 @@ console.log('#####data ',data)
 	
 // Funzione per recuperare il tab dall'id
 	async function fetchTabById(tabId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('tabs')
             .select('*')
 			.eq('id', tabId);
@@ -646,7 +646,7 @@ console.log('#####data ',data)
 	
   // Funzione per recuperare il tab dal nome
 	async function fetchTabByName(name) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('tabs')
             .select('*')
 			.eq('name', name);
@@ -661,7 +661,7 @@ console.log('#####data ',data)
 	
 	// Funzione per caricare le sezioni
 	async function loadSections( tabId ) {
-		const { data, error } = await supabase
+		const { data, error } = await supabaseClient
 			.from('sections')
 			.select('*')
 			.eq('tab_id', tabId).order('name', { ascending: true });
@@ -998,7 +998,7 @@ console.log('#####data ',data)
 async function verificaPresenzaOggi(userId) {
     const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('work_days')
         .select('*')
         .eq('date', today);
@@ -1054,7 +1054,7 @@ async function verificaPresenzaDomani() {
 	tomorrow.setDate(today.getDate() + 1); // aggiunge 1 giorno
 
 	const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('work_days')
         .select('*')
         .eq('date', tomorrowStr);
@@ -1129,7 +1129,7 @@ async function verificaPresenzaProssimoGiornoLavorativo() {
     const anno = nextWorkDay.getFullYear();
     const dataFormattata = `${giornoNome} ${giorno}/${mese}/${anno}`;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('work_days')
         .select('*')
         .eq('date', nextWorkDayStr);
@@ -1232,13 +1232,13 @@ async function controllaConsuntivazione() {
 
   
   // Controlla se è già stata fatta
-  const { data: existing, error } = await supabase
+  const { data: existing, error } = await supabaseClient
     .from('consuntivazioni')
     .select('*')
     .eq('mese_riferimento', mese);
 
   if (error) {
-    console.error('Errore Supabase:', error);
+    console.error('Errore supabaseClient:', error);
     return;
   }
 
@@ -1266,12 +1266,12 @@ async function controllaConsuntivazione() {
 	
 	const conferma = confirm(stringAlert);
     if (conferma) {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseClient
         .from('consuntivazioni')
         .insert([{ mese_riferimento: mese }]);
 
       if (insertError) {
-        alert('Errore nel salvataggio su Supabase.');
+        alert('Errore nel salvataggio su supabaseClient.');
         console.error(insertError);
       } else {
         alert('✅ Consuntivazione segnata come completata!');
