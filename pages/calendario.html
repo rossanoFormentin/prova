@@ -1,12 +1,21 @@
 <h3>Calendario Presenze</h3>
 
+<div id="calendar-filters" class="mb-2">
+    <label><input type="checkbox" value="presenza" checked> Presenza</label>
+    <label><input type="checkbox" value="smart" checked> Smart Working</label>
+    <label><input type="checkbox" value="ferie" checked> Ferie</label>
+    <label><input type="checkbox" value="festivita" checked> Festività</label>
+    <label><input type="checkbox" value="scoperto" checked> Scoperto</label>
+    <label><input type="checkbox" value="supplementare" checked> Supplementare</label>
+</div>
+
 <div id="calendar-legend" class="mb-2">
-    <span class="legend-item" data-status="presenza" style="background:#d1e7dd;padding:2px 6px;border-radius:3px;cursor:pointer;">Presenza</span>
-    <span class="legend-item" data-status="smart" style="background:#cfe2ff;padding:2px 6px;border-radius:3px;cursor:pointer;">Smart Working</span>
-    <span class="legend-item" data-status="ferie" style="background:#fff3cd;padding:2px 6px;border-radius:3px;cursor:pointer;">Ferie</span>
-    <span class="legend-item" data-status="festivita" style="background:#e2e3e5;padding:2px 6px;border-radius:3px;cursor:pointer;">Festività</span>
-    <span class="legend-item" data-status="scoperto" style="background:#f8d7da;padding:2px 6px;border-radius:3px;cursor:pointer;">Scoperto</span>
-    <span class="legend-item" data-status="supplementare" style="background:#e5dbff;padding:2px 6px;border-radius:3px;cursor:pointer;">Supplementare</span>
+    <span style="background:#d1e7dd;padding:2px 6px;border-radius:3px;">Presenza</span>
+    <span style="background:#cfe2ff;padding:2px 6px;border-radius:3px;">Smart Working</span>
+    <span style="background:#fff3cd;padding:2px 6px;border-radius:3px;">Ferie</span>
+    <span style="background:#e2e3e5;padding:2px 6px;border-radius:3px;">Festività</span>
+    <span style="background:#f8d7da;padding:2px 6px;border-radius:3px;">Scoperto</span>
+    <span style="background:#e5dbff;padding:2px 6px;border-radius:3px;">Supplementare</span>
 </div>
 
 <div id="calendar"></div>
