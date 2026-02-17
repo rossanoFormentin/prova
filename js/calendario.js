@@ -177,6 +177,17 @@ dayCellDidMount: function(info) {
 
     info.el.style.backgroundColor = getBGColor(day.status);
 }
+
+eventDidMount: function(info){
+
+    const color = getBGColor(info.event.title);
+
+    info.el.style.backgroundColor = color;
+    info.el.style.border = "none";
+    info.el.style.color = "#000";
+    info.el.style.boxShadow = "none";
+}
+
  
 
 // --- Colori eventi ---

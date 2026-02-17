@@ -49,3 +49,13 @@
 .current-day-scoperto { border-color: #dc3545; }
 .current-day-supplementare { border-color: #6610f2; }
 .current-day-default { border-color: #0d6efd; }
+
+.fc-daygrid-event {
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 4px;
+}
+
+.fc-event-main {
+    background: transparent !important;
+}
