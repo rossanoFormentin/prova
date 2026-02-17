@@ -6,8 +6,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Mini router: carica pagine dinamiche nella app-content
 const routes = {
-    servizi: 'servizi.html',     
-    altro: 'altro.html', 
+    //servizi: 'servizi.html',     
+    //altro: 'altro.html', 
     calendario: 'calendario.html'        
 };
 
