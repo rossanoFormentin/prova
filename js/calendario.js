@@ -1,5 +1,4 @@
-if (!window.calendarioInizializzato) {
-    window.calendarioInizializzato = true;
+
 
     let calendar;
 
@@ -138,4 +137,3 @@ if (!window.calendarioInizializzato) {
     }
 
     loadCalendario();
-}
