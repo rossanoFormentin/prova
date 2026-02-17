@@ -90,6 +90,11 @@ async function loadPage(page) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
 
+        // ✅ QUI NASCE IL CALENDARIO
+        if (page === "calendario") {
+            setTimeout(loadCalendario, 0);
+        }
+
     } catch (err) {
         contentDiv.innerHTML = `<p>Errore nel caricamento della pagina.</p>`;
     }
