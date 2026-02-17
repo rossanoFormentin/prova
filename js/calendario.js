@@ -37,8 +37,8 @@ function renderCalendar(workDays) {
             right: 'myNext today'
         },
         customButtons: {
-            myPrev: { text: '← Mese precedente', click: () => calendar.prev() },
-            myNext: { text: 'Mese successivo →', click: () => calendar.next() }
+            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button']},
+            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button']  }
         },
         events: getFilteredEvents(),
         dateClick: info => openDayModal(info.dateStr),
