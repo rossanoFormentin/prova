@@ -12,7 +12,7 @@ const calendar = new Calendar(container, {
 
 // --- FUNZIONE: Carica Eventi da Supabase ---
 async function fetchAndRenderEvents() {
-    const { data, error } = await _supabase
+    const { data, error } = await supabaseClient
         .from('events')
         .select('*');
 
