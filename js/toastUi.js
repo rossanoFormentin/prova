@@ -1,53 +1,68 @@
-const CalendarToastUi = tui.Calendar;
-const container = document.getElementById('calendarToastUi');
+document.addEventListener("DOMContentLoaded", () => {
 
-// Inizializzazione Calendario
-const calendarToastUi = new CalendarToastUi(container, {
-  defaultView: 'week', // o 'month'
-  useFormPopup: true,  // Popup integrato per creare eventi
-  useDetailPopup: true,
-  gridSelection: true,
-  timezone: { zones: [{ timezoneName: 'Europe/Rome', displayLabel: 'Roma' }] },
-});
+    const CalendarToastUi = tui.Calendar;
+    const container = document.getElementById('calendarToastUi');
 
-// --- FUNZIONE: Carica Eventi da Supabase ---
-async function fetchAndRenderEvents() {
-    const { data, error } = await supabaseClient
-        .from('events')
-        .select('*');
+    const calendarToastUi = new CalendarToastUi(container, {
+        defaultView: 'week',
+        useFormPopup: true,
+        useDetailPopup: true,
+        gridSelection: true,
+        timezone: {
+            zones: [{ timezoneName: 'Europe/Rome', displayLabel: 'Roma' }]
+        }
+    });
 
-    if (error) return console.error('Errore caricamento:', error);
+    // ---------------- Carica eventi ----------------
+    async function fetchAndRenderEvents() {
+        const { data, error } = await supabaseClient
+            .from('events')
+            .select('*');
 
-    // Mappatura dati per Toast UI
-    const formatted = data.map(ev => ({
-        id: ev.id,
-        title: ev.title,
-        start: ev.start_date,
-        end: ev.end_date,
-        category: ev.category
-    }));
+        if (error) {
+            console.error(error);
+            return;
+        }
 
-    calendarToastUi.createEvents(formatted);
-}
+        const formatted = data.map(ev => ({
+            id: String(ev.id),
+            title: ev.title,
+            start: ev.start_date,
+            end: ev.end_date,
+            category: ev.category || 'time'
+        }));
 
-// --- FUNZIONE: Salva nuovo evento ---
-calendarToastUi.on('beforeCreateEvent', async (eventData) => {
-    const newEvent = {
-        title: eventData.title,
-        start_date: eventData.start.toISOString(),
-        end_date: eventData.end.toISOString(),
-        category: eventData.isAllday ? 'allday' : 'time'
-    };
-
-    const { data, error } = await supabaseClient
-        .from('events')
-        .insert([newEvent])
-        .select();
-
-    if (!error) {
-        calendarToastUi.createEvents([{ ...newEvent, id: data[0].id }]);
+        calendarToastUi.createEvents(formatted);
     }
-});
 
-// Avvio
-fetchAndRenderEvents();
+    // ---------------- Salvataggio evento ----------------
+    calendarToastUi.on('beforeCreateEvent', async (eventData) => {
+
+        const newEvent = {
+            title: eventData.title,
+            start_date: eventData.start.toISOString(),
+            end_date: eventData.end.toISOString(),
+            category: eventData.isAllday ? 'allday' : 'time'
+        };
+
+        const { data, error } = await supabaseClient
+            .from('events')
+            .insert([newEvent])
+            .select()
+            .single();
+
+        if (!error) {
+            calendarToastUi.createEvents([{
+                id: String(data.id),
+                title: data.title,
+                start: data.start_date,
+                end: data.end_date,
+                category: data.category
+            }]);
+        }
+    });
+
+    // AVVIO
+    fetchAndRenderEvents();
+
+});
