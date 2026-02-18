@@ -1,8 +1,8 @@
-const Calendar = tui.Calendar;
+const CalendarToastUi = tui.Calendar;
 const container = document.getElementById('calendarToastUi');
 
 // Inizializzazione Calendario
-const calendarToastUi = new Calendar(container, {
+const calendarToastUi = new CalendarToastUi(container, {
   defaultView: 'week', // o 'month'
   useFormPopup: true,  // Popup integrato per creare eventi
   useDetailPopup: true,
