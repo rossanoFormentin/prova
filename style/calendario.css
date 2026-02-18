@@ -111,7 +111,7 @@
     
 }
 
-fc-daygrid-day-number a {
+fc-daygrid-day-top a {
     pointer-events: none; /* disabilita click */
     text-decoration: none;
     color: inherit;
