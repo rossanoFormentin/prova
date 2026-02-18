@@ -146,7 +146,7 @@ function renderCalendar(workDays) {
             };
         },
 
-        /*dayCellDidMount: function(info) {
+        dayCellDidMount: function(info) {
             // Rimuove il link del numero giorno
             const a = info.el.querySelector('.fc-daygrid-day-number a');
             if(a) a.replaceWith(document.createTextNode(a.textContent));
@@ -158,9 +158,9 @@ function renderCalendar(workDays) {
                     openDayModal(info.dateStr);
                 }
             });
-        },*/
+        },
         
-        dayCellDidMount: function(arg) {
+        /*dayCellDidMount: function(arg) {
             const dayStr = arg.date.toISOString().slice(0,10);
             const dayData = allWorkDays.find(d => d.date === dayStr);
 
@@ -192,7 +192,7 @@ function renderCalendar(workDays) {
                     extendedProps: { note: dayData.note, giustificativo: dayData.giustificativo } 
                 });
             }
-        },
+        },*/
 
 
         eventDidMount: function(info){
