@@ -146,7 +146,7 @@ function renderCalendar(workDays) {
             };
         },
 
-        dayCellDidMount: function(info) {
+        /*dayCellDidMount: function(info) {
             // Rimuove il link del numero giorno
             const a = info.el.querySelector('.fc-daygrid-day-number a');
             if(a) a.replaceWith(document.createTextNode(a.textContent));
@@ -158,7 +158,42 @@ function renderCalendar(workDays) {
                     openDayModal(info.dateStr);
                 }
             });
+        },*/
+        
+        dayCellDidMount: function(arg) {
+            const dayStr = arg.date.toISOString().slice(0,10);
+            const dayData = allWorkDays.find(d => d.date === dayStr);
+
+            // Rimuovi l'<a> del numero giorno
+            const numberEl = arg.el.querySelector('.fc-daygrid-day-number');
+            if(numberEl){
+                numberEl.replaceWith(document.createElement('span'));
+                arg.el.querySelector('span').textContent = arg.date.getDate();
+            }
+
+            // Mostra il workday-card dentro la cella
+            if(dayData){
+                const showFlag = dayData.giustificativo && ['smart','ferie','supplementare'].includes(dayData.status);
+                const cardHtml = `
+                    <div class="workday-card status-${dayData.status}" style="height:100%; width:100%; cursor:pointer;">
+                        <div class="wd-status">${getStatusLabel(dayData.status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${dayData.note ? `<div class="wd-note">${dayData.note}</div>` : ''}
+                    </div>
+                `;
+                // Rimuovi vecchi figli e inserisci card
+                const eventsContainer = arg.el.querySelector('.fc-daygrid-day-events');
+                eventsContainer.innerHTML = cardHtml;
+
+                // Rendi la cella cliccabile
+                arg.el.onclick = () => openDayModal(dayStr, { 
+                    id: dayData.id, 
+                    title: dayData.status, 
+                    extendedProps: { note: dayData.note, giustificativo: dayData.giustificativo } 
+                });
+            }
         },
+
 
         eventDidMount: function(info){
             const color = getBGColor(info.event.title);
