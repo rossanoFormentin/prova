@@ -105,17 +105,9 @@
     border-radius:8px;
 }
 
-.fc-day-today.fc-daygrid-day-number{
+.fc-day-today .fc-daygrid-day-number{
     font-weight:bold;
     color:#0d6efd;
-    
-}
-
-fc-daygrid-day-top a {
-    pointer-events: none; /* disabilita click */
-    text-decoration: none;
-    color: inherit;
-    cursor: default;
 }
 
 .fc-bg-event{
