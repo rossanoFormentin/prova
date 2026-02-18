@@ -86,13 +86,19 @@ async function loadPage(page) {
         }
     }
 
-     // Se pagina toastUi, carica script
     if (page === "toastUi") {
         if (!document.getElementById('toastUi-script')) {
+
             const script = document.createElement('script');
             script.id = 'toastUi-script';
             script.src = "js/toastUi.js";
+
+            script.onload = () => {
+                loadCalendariotoastUi(); // ← QUI
+            };
+
             document.body.appendChild(script);
+
         } else if (typeof loadCalendariotoastUi === "function") {
             loadCalendariotoastUi();
         }
