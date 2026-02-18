@@ -1,37 +1,9 @@
-let calendar; 
+let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
 
-// -------------------- Timer logout automatico --------------------
-const LOGOUT_TIMEOUT = 30 * 60 * 1000; // 30 minuti
-let logoutTimer = null;
-
-function startLogoutTimer() {
-    if (logoutTimer) clearTimeout(logoutTimer);
-    logoutTimer = setTimeout(async () => {
-        await supabaseClient.auth.signOut();
-        Swal.fire({ icon:'info', title:'Sessione terminata', text:'Hai superato i 30 minuti di inattività.' });
-        window.location.reload();
-    }, LOGOUT_TIMEOUT);
-}
-
-// -------------------- Controllo sessione --------------------
-async function checkSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session || !session.user) {
-        await supabaseClient.auth.signOut();
-        Swal.fire({ icon:'warning', title:'Sessione scaduta', text:'Devi accedere di nuovo.' });
-        window.location.reload();
-        return false;
-    }
-    startLogoutTimer(); // reset timer ogni volta che la sessione è valida
-    return true;
-}
-
 // -------------------- Carica dati dal DB --------------------
 async function loadCalendario() {
-    if (!(await checkSession())) return;
-
     const { data, error } = await supabaseClient
         .from("work_days")
         .select("*")
@@ -72,13 +44,9 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        dateClick: async info => {
-            if(await checkSession()) openDayModal(info.dateStr);
-        },
-
-        eventClick: async info => {
-            if(await checkSession()) openDayModal(info.event.startStr, info.event);
-        },
+        // Click sull’intera cella o sull’evento
+        dateClick: info => openDayModal(info.dateStr),
+        eventClick: info => openDayModal(info.event.startStr, info.event),
 
         eventContent: function(arg) {
             const status = arg.event.title;
@@ -98,16 +66,32 @@ function renderCalendar(workDays) {
         },
 
         dayCellDidMount: function(info) {
-            // Rimuove il link del numero giorno
+            // Rimuove il link sul numero del giorno
             const a = info.el.querySelector('.fc-daygrid-day-number a');
             if(a) a.replaceWith(document.createTextNode(a.textContent));
 
-            // Click su tutta la cella
-            info.el.addEventListener('click', async (e) => {
-                if(!e.target.closest('.fc-event') && await checkSession()) {
+            // Click sull’intera cella
+            info.el.addEventListener('click', (e) => {
+                if(!e.target.closest('.fc-event')) {
                     openDayModal(info.dateStr);
                 }
             });
+
+            // Mostra eventuale workday-card dentro la cella
+            const dayStr = info.date.toISOString().slice(0,10);
+            const dayData = allWorkDays.find(d => d.date === dayStr);
+            if(dayData){
+                const showFlag = dayData.giustificativo && ['smart','ferie','supplementare'].includes(dayData.status);
+                const cardHtml = `
+                    <div class="workday-card status-${dayData.status}" style="height:100%; width:100%; cursor:pointer;">
+                        <div class="wd-status">${getStatusLabel(dayData.status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${dayData.note ? `<div class="wd-note">${dayData.note}</div>` : ''}
+                    </div>
+                `;
+                const eventsContainer = info.el.querySelector('.fc-daygrid-day-events');
+                eventsContainer.innerHTML = cardHtml;
+            }
         },
 
         eventDidMount: function(info){
@@ -117,6 +101,7 @@ function renderCalendar(workDays) {
             info.el.style.color = "#000";
             info.el.style.boxShadow = "none";
 
+            // Tooltip
             let text = info.event.extendedProps.note || '';
             if(info.event.extendedProps.giustificativo &&
                 ['smart','ferie','supplementare'].includes(info.event.title)) {
@@ -171,9 +156,7 @@ function getFilteredEvents() {
 // -------------------- Setup legenda cliccabile --------------------
 function setupLegendFilter() {
     document.querySelectorAll('.legend-item').forEach(item => {
-        item.addEventListener('click', async () => {
-            if(!(await checkSession())) return;
-
+        item.addEventListener('click', () => {
             const status = item.dataset.status;
             activeStatusFilter = (activeStatusFilter === status) ? null : status;
             calendar.removeAllEvents();
@@ -184,9 +167,7 @@ function setupLegendFilter() {
 
     const resetBtn = document.getElementById('reset-legend');
     if(resetBtn){
-        resetBtn.addEventListener('click', async () => {
-            if(!(await checkSession())) return;
-
+        resetBtn.addEventListener('click', () => {
             activeStatusFilter = null;
             calendar.removeAllEvents();
             calendar.addEventSource(getFilteredEvents());
@@ -228,7 +209,12 @@ function getColor(status) {
 
 // -------------------- Modal e salvataggio --------------------
 async function openDayModal(date, event=null){
-    if(!(await checkSession())) return;
+    // Se la sessione è scaduta, blocca
+    const session = supabaseClient.auth.getSession();
+    if(!session) {
+        Swal.fire({ icon: 'warning', title: 'Sessione scaduta', text: 'Effettua nuovamente il login.' });
+        return;
+    }
 
     const result = await Swal.fire({
         title: `Giorno ${date}`,
@@ -269,8 +255,6 @@ async function openDayModal(date, event=null){
 
 // -------------------- Salvataggio e aggiornamento evento --------------------
 async function saveDay(date, status, note, giustificativo){
-    if(!(await checkSession())) return;
-
     try {
         const { data, error } = await supabaseClient
             .from("work_days")
