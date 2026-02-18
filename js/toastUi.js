@@ -1,5 +1,5 @@
 const Calendar = tui.Calendar;
-const container = document.getElementById('calendar');
+const container = document.getElementById('calendarToastUi');
 
 // Inizializzazione Calendario
 const calendar = new Calendar(container, {
@@ -39,7 +39,7 @@ calendar.on('beforeCreateEvent', async (eventData) => {
         category: eventData.isAllday ? 'allday' : 'time'
     };
 
-    const { data, error } = await _supabase
+    const { data, error } = await supabaseClient
         .from('events')
         .insert([newEvent])
         .select();
