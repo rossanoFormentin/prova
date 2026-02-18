@@ -311,7 +311,7 @@ function getColor(status) {
 }
 
 // -------------------- Modal e salvataggio --------------------
-/*async function openDayModal(date, event=null){
+async function openDayModal(date, event=null){
     const result = await Swal.fire({
         title: `Giorno ${date}`,
         html: `
@@ -348,54 +348,12 @@ function getColor(status) {
         document.getElementById("giustificativo").checked
     );
 }
-*/
 
-async function openDayModal(date, event=null){
-    // Recupera dati se esiste evento
-    const currentStatus = event?.title || '';
-    const currentNote = event?.extendedProps.note || '';
-    const currentGiustificativo = event?.extendedProps.giustificativo || false;
 
-    const result = await Swal.fire({
-        title: `Giorno ${date}`,
-        html: `
-            <select id="status" class="swal2-input">
-                <option value="presenza">Presenza</option>
-                <option value="smart">Smart Working</option>
-                <option value="ferie">Ferie</option>
-                <option value="festivita">Festività</option>
-                <option value="supplementare">Supplementare</option>
-                <option value="scoperto">Scoperto</option>
-            </select>
-            <input id="note" class="swal2-input" placeholder="Note">
-            <label style="margin-top:5px">
-                <input type="checkbox" id="giustificativo"> Giustificativo
-            </label>
-        `,
-        showCancelButton: true,
-        confirmButtonText: "Salva",
-        didOpen: () => {
-            document.getElementById("status").value = currentStatus;
-            document.getElementById("note").value = currentNote;
-            document.getElementById("giustificativo").checked = currentGiustificativo;
-        }
-    });
-
-    if(!result.isConfirmed) return;
-
-    // Salva subito
-    await saveDay(
-        date,
-        document.getElementById("status").value,
-        document.getElementById("note").value,
-        document.getElementById("giustificativo").checked,
-        event?.id
-    );
-}
 
 
 // -------------------- Salvataggio e aggiornamento evento --------------------
-/*async function saveDay(date, status, note, giustificativo){
+async function saveDay(date, status, note, giustificativo){
     try {
         const { data, error } = await supabaseClient
             .from("work_days")
@@ -416,38 +374,11 @@ async function openDayModal(date, event=null){
     } catch(err) {
         console.error(err);
     }
-}*/
-
-async function saveDay(date, status, note, giustificativo, eventId=null){
-    try {
-        const payload = { date, status, note, giustificativo };
-
-        // Se esiste eventId lo aggiorna, altrimenti crea nuovo
-        if(eventId) payload.id = parseInt(eventId);
-
-        const { data, error } = await supabaseClient
-            .from("work_days")
-            .upsert(payload, { onConflict: "date" })
-            .select()
-            .single();
-
-        if(error) return console.error(error);
-
-        // Aggiorna array locale
-        const idx = allWorkDays.findIndex(d => d.date === data.date);
-        if(idx >= 0) allWorkDays[idx] = data;
-        else allWorkDays.push(data);
-
-        // Aggiorna calendario senza ricaricare tutto
-        updateCalendarEvent(data);
-
-    } catch(err) {
-        console.error(err);
-    }
 }
 
 
-/*function updateCalendarEvent(day) {
+
+function updateCalendarEvent(day) {
     // Cerca evento per ID (meglio usare id del DB)
     let existing = calendar.getEventById(day.id?.toString());
 
@@ -484,46 +415,9 @@ async function saveDay(date, status, note, giustificativo, eventId=null){
         });
     }
 }
-*/
 
-function updateCalendarEvent(day) {
-    let existing = calendar.getEventById(day.id?.toString());
 
-    if(existing){
-        // Aggiorna proprietà
-        existing.setProp("title", day.status);
-        existing.setProp("color", getColor(day.status));
-        existing.setExtendedProp("note", day.note);
-        existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Aggiorna HTML
-        const el = existing.el;
-        if(el){
-            const showFlag = day.giustificativo && ['smart','ferie','supplementare'].includes(day.status);
-            el.innerHTML = `
-                <div class="workday-card status-${day.status}" style="height:100%; width:100%; cursor:pointer;">
-                    <div class="wd-status">${getStatusLabel(day.status)}</div>
-                    ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                    ${day.note ? `<div class="wd-note">${day.note}</div>` : ''}
-                </div>
-            `;
-        }
-
-    } else {
-        // Nuovo evento
-        calendar.addEvent({
-            id: day.id?.toString(),
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: {
-                note: day.note,
-                giustificativo: day.giustificativo
-            }
-        });
-    }
-}
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
