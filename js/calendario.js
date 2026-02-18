@@ -1,9 +1,37 @@
-let calendar;
+let calendar; 
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
 
+// -------------------- Timer logout automatico --------------------
+const LOGOUT_TIMEOUT = 30 * 60 * 1000; // 30 minuti
+let logoutTimer = null;
+
+function startLogoutTimer() {
+    if (logoutTimer) clearTimeout(logoutTimer);
+    logoutTimer = setTimeout(async () => {
+        await supabaseClient.auth.signOut();
+        Swal.fire({ icon:'info', title:'Sessione terminata', text:'Hai superato i 30 minuti di inattività.' });
+        window.location.reload();
+    }, LOGOUT_TIMEOUT);
+}
+
+// -------------------- Controllo sessione --------------------
+async function checkSession() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.user) {
+        await supabaseClient.auth.signOut();
+        Swal.fire({ icon:'warning', title:'Sessione scaduta', text:'Devi accedere di nuovo.' });
+        window.location.reload();
+        return false;
+    }
+    startLogoutTimer(); // reset timer ogni volta che la sessione è valida
+    return true;
+}
+
 // -------------------- Carica dati dal DB --------------------
 async function loadCalendario() {
+    if (!(await checkSession())) return;
+
     const { data, error } = await supabaseClient
         .from("work_days")
         .select("*")
@@ -17,87 +45,6 @@ async function loadCalendario() {
 }
 
 // -------------------- Render calendario --------------------
-/*function renderCalendar(workDays) {
-    const calendarEl = document.getElementById("calendar");
-    if (!calendarEl) return;
-
-    if (calendar) calendar.destroy();
-    calendarEl.innerHTML = '';
-
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'it',
-        height: 'auto',
-        weekends: false,
-        showNonCurrentDates: false,
-        fixedWeekCount: false,
-
-        headerToolbar: {
-            left: 'myPrev',
-            center: 'title',
-            right: 'myNext today'
-        },
-        customButtons: {
-            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button'] },
-            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button'] }
-        },
-
-        events: getFilteredEvents(),
-
-        dateClick: info => openDayModal(info.dateStr),
-        eventClick: info => openDayModal(info.event.startStr, info.event),
-
-        eventContent: function(arg) {
-            const status = arg.event.title;
-            const note = arg.event.extendedProps.note || '';
-            const giustificativo = arg.event.extendedProps.giustificativo;
-            const showFlag = giustificativo && ['smart', 'ferie', 'supplementare'].includes(status);
-
-            return {
-                html: `
-                    <div class="workday-card status-${status}">
-                        <div class="wd-status">${getStatusLabel(status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `
-            };
-        },
-
-        dayCellClassNames: function(arg) {
-            const todayStr = new Date().toDateString();
-            if(arg.date.toDateString() === todayStr){
-                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
-                if(todayEvent){
-                    return ['current-day-border', `current-day-${todayEvent.status}`];
-                } else {
-                    return ['current-day-border', 'current-day-default'];
-                }
-            }
-            return [];
-        },
-
-        eventDidMount: function(info){
-            const color = getBGColor(info.event.title);
-            info.el.style.backgroundColor = color;
-            info.el.style.border = "none";
-            info.el.style.color = "#000";
-            info.el.style.boxShadow = "none";
-
-            // Tooltip
-            let text = info.event.extendedProps.note || '';
-            if(info.event.extendedProps.giustificativo &&
-                ['smart','ferie','supplementare'].includes(info.event.title)) {
-                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
-            }
-            if(text) info.el.setAttribute('title', text);
-        }
-    });
-
-    calendar.render();
-}
-*/
-
 function renderCalendar(workDays) {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -125,9 +72,13 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        dateClick: info => openDayModal(info.dateStr),
+        dateClick: async info => {
+            if(await checkSession()) openDayModal(info.dateStr);
+        },
 
-        eventClick: info => openDayModal(info.event.startStr, info.event),
+        eventClick: async info => {
+            if(await checkSession()) openDayModal(info.event.startStr, info.event);
+        },
 
         eventContent: function(arg) {
             const status = arg.event.title;
@@ -152,48 +103,12 @@ function renderCalendar(workDays) {
             if(a) a.replaceWith(document.createTextNode(a.textContent));
 
             // Click su tutta la cella
-            info.el.addEventListener('click', (e) => {
-                // Ignora click su eventi già renderizzati
-                if(!e.target.closest('.fc-event')) {
+            info.el.addEventListener('click', async (e) => {
+                if(!e.target.closest('.fc-event') && await checkSession()) {
                     openDayModal(info.dateStr);
                 }
             });
         },
-        
-        /*dayCellDidMount: function(arg) {
-            const dayStr = arg.date.toISOString().slice(0,10);
-            const dayData = allWorkDays.find(d => d.date === dayStr);
-
-            // Rimuovi l'<a> del numero giorno
-            const numberEl = arg.el.querySelector('.fc-daygrid-day-number');
-            if(numberEl){
-                numberEl.replaceWith(document.createElement('span'));
-                arg.el.querySelector('span').textContent = arg.date.getDate();
-            }
-
-            // Mostra il workday-card dentro la cella
-            if(dayData){
-                const showFlag = dayData.giustificativo && ['smart','ferie','supplementare'].includes(dayData.status);
-                const cardHtml = `
-                    <div class="workday-card status-${dayData.status}" style="height:100%; width:100%; cursor:pointer;">
-                        <div class="wd-status">${getStatusLabel(dayData.status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${dayData.note ? `<div class="wd-note">${dayData.note}</div>` : ''}
-                    </div>
-                `;
-                // Rimuovi vecchi figli e inserisci card
-                const eventsContainer = arg.el.querySelector('.fc-daygrid-day-events');
-                eventsContainer.innerHTML = cardHtml;
-
-                // Rendi la cella cliccabile
-                arg.el.onclick = () => openDayModal(dayStr, { 
-                    id: dayData.id, 
-                    title: dayData.status, 
-                    extendedProps: { note: dayData.note, giustificativo: dayData.giustificativo } 
-                });
-            }
-        },*/
-
 
         eventDidMount: function(info){
             const color = getBGColor(info.event.title);
@@ -202,7 +117,6 @@ function renderCalendar(workDays) {
             info.el.style.color = "#000";
             info.el.style.boxShadow = "none";
 
-            // Tooltip
             let text = info.event.extendedProps.note || '';
             if(info.event.extendedProps.giustificativo &&
                 ['smart','ferie','supplementare'].includes(info.event.title)) {
@@ -214,8 +128,6 @@ function renderCalendar(workDays) {
 
     calendar.render();
 }
-
-
 
 // -------------------- Status label --------------------
 function getStatusLabel(status){
@@ -259,7 +171,9 @@ function getFilteredEvents() {
 // -------------------- Setup legenda cliccabile --------------------
 function setupLegendFilter() {
     document.querySelectorAll('.legend-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', async () => {
+            if(!(await checkSession())) return;
+
             const status = item.dataset.status;
             activeStatusFilter = (activeStatusFilter === status) ? null : status;
             calendar.removeAllEvents();
@@ -270,7 +184,9 @@ function setupLegendFilter() {
 
     const resetBtn = document.getElementById('reset-legend');
     if(resetBtn){
-        resetBtn.addEventListener('click', () => {
+        resetBtn.addEventListener('click', async () => {
+            if(!(await checkSession())) return;
+
             activeStatusFilter = null;
             calendar.removeAllEvents();
             calendar.addEventSource(getFilteredEvents());
@@ -312,6 +228,8 @@ function getColor(status) {
 
 // -------------------- Modal e salvataggio --------------------
 async function openDayModal(date, event=null){
+    if(!(await checkSession())) return;
+
     const result = await Swal.fire({
         title: `Giorno ${date}`,
         html: `
@@ -349,11 +267,10 @@ async function openDayModal(date, event=null){
     );
 }
 
-
-
-
 // -------------------- Salvataggio e aggiornamento evento --------------------
 async function saveDay(date, status, note, giustificativo){
+    if(!(await checkSession())) return;
+
     try {
         const { data, error } = await supabaseClient
             .from("work_days")
@@ -363,12 +280,10 @@ async function saveDay(date, status, note, giustificativo){
 
         if(error) return console.error(error);
 
-        // Aggiorna array locale
         const idx = allWorkDays.findIndex(d => d.date === data.date);
         if(idx >= 0) allWorkDays[idx] = data;
         else allWorkDays.push(data);
 
-        // Aggiorna evento in FullCalendar
         updateCalendarEvent(data);
 
     } catch(err) {
@@ -376,10 +291,7 @@ async function saveDay(date, status, note, giustificativo){
     }
 }
 
-
-
 function updateCalendarEvent(day) {
-    // Cerca evento per ID (meglio usare id del DB)
     let existing = calendar.getEventById(day.id?.toString());
 
     if (existing) {
@@ -388,7 +300,6 @@ function updateCalendarEvent(day) {
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Aggiorna HTML
         const el = existing.el;
         if(el){
             const showFlag = day.giustificativo && ['smart','ferie','supplementare'].includes(day.status);
@@ -401,7 +312,6 @@ function updateCalendarEvent(day) {
             `;
         }
     } else {
-        // Evento nuovo
         calendar.addEvent({
             id: day.id?.toString(),
             title: day.status,
@@ -415,9 +325,6 @@ function updateCalendarEvent(day) {
         });
     }
 }
-
-
-
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
