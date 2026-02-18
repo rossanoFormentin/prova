@@ -17,6 +17,87 @@ async function loadCalendario() {
 }
 
 // -------------------- Render calendario --------------------
+/*function renderCalendar(workDays) {
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return;
+
+    if (calendar) calendar.destroy();
+    calendarEl.innerHTML = '';
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'it',
+        height: 'auto',
+        weekends: false,
+        showNonCurrentDates: false,
+        fixedWeekCount: false,
+
+        headerToolbar: {
+            left: 'myPrev',
+            center: 'title',
+            right: 'myNext today'
+        },
+        customButtons: {
+            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button'] },
+            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button'] }
+        },
+
+        events: getFilteredEvents(),
+
+        dateClick: info => openDayModal(info.dateStr),
+        eventClick: info => openDayModal(info.event.startStr, info.event),
+
+        eventContent: function(arg) {
+            const status = arg.event.title;
+            const note = arg.event.extendedProps.note || '';
+            const giustificativo = arg.event.extendedProps.giustificativo;
+            const showFlag = giustificativo && ['smart', 'ferie', 'supplementare'].includes(status);
+
+            return {
+                html: `
+                    <div class="workday-card status-${status}">
+                        <div class="wd-status">${getStatusLabel(status)}</div>
+                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                    </div>
+                `
+            };
+        },
+
+        dayCellClassNames: function(arg) {
+            const todayStr = new Date().toDateString();
+            if(arg.date.toDateString() === todayStr){
+                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
+                if(todayEvent){
+                    return ['current-day-border', `current-day-${todayEvent.status}`];
+                } else {
+                    return ['current-day-border', 'current-day-default'];
+                }
+            }
+            return [];
+        },
+
+        eventDidMount: function(info){
+            const color = getBGColor(info.event.title);
+            info.el.style.backgroundColor = color;
+            info.el.style.border = "none";
+            info.el.style.color = "#000";
+            info.el.style.boxShadow = "none";
+
+            // Tooltip
+            let text = info.event.extendedProps.note || '';
+            if(info.event.extendedProps.giustificativo &&
+                ['smart','ferie','supplementare'].includes(info.event.title)) {
+                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
+            }
+            if(text) info.el.setAttribute('title', text);
+        }
+    });
+
+    calendar.render();
+}
+*/
+
 function renderCalendar(workDays) {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -44,8 +125,8 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        // Click sull’intera cella o sull’evento
         dateClick: info => openDayModal(info.dateStr),
+
         eventClick: info => openDayModal(info.event.startStr, info.event),
 
         eventContent: function(arg) {
@@ -66,20 +147,31 @@ function renderCalendar(workDays) {
         },
 
         dayCellDidMount: function(info) {
-            // Rimuove il link sul numero del giorno
+            // Rimuove il link del numero giorno
             const a = info.el.querySelector('.fc-daygrid-day-number a');
             if(a) a.replaceWith(document.createTextNode(a.textContent));
 
-            // Click sull’intera cella
+            // Click su tutta la cella
             info.el.addEventListener('click', (e) => {
+                // Ignora click su eventi già renderizzati
                 if(!e.target.closest('.fc-event')) {
                     openDayModal(info.dateStr);
                 }
             });
-
-            // Mostra eventuale workday-card dentro la cella
-            const dayStr = info.date.toISOString().slice(0,10);
+        },
+        
+        /*dayCellDidMount: function(arg) {
+            const dayStr = arg.date.toISOString().slice(0,10);
             const dayData = allWorkDays.find(d => d.date === dayStr);
+
+            // Rimuovi l'<a> del numero giorno
+            const numberEl = arg.el.querySelector('.fc-daygrid-day-number');
+            if(numberEl){
+                numberEl.replaceWith(document.createElement('span'));
+                arg.el.querySelector('span').textContent = arg.date.getDate();
+            }
+
+            // Mostra il workday-card dentro la cella
             if(dayData){
                 const showFlag = dayData.giustificativo && ['smart','ferie','supplementare'].includes(dayData.status);
                 const cardHtml = `
@@ -89,10 +181,19 @@ function renderCalendar(workDays) {
                         ${dayData.note ? `<div class="wd-note">${dayData.note}</div>` : ''}
                     </div>
                 `;
-                const eventsContainer = info.el.querySelector('.fc-daygrid-day-events');
+                // Rimuovi vecchi figli e inserisci card
+                const eventsContainer = arg.el.querySelector('.fc-daygrid-day-events');
                 eventsContainer.innerHTML = cardHtml;
+
+                // Rendi la cella cliccabile
+                arg.el.onclick = () => openDayModal(dayStr, { 
+                    id: dayData.id, 
+                    title: dayData.status, 
+                    extendedProps: { note: dayData.note, giustificativo: dayData.giustificativo } 
+                });
             }
-        },
+        },*/
+
 
         eventDidMount: function(info){
             const color = getBGColor(info.event.title);
@@ -113,6 +214,8 @@ function renderCalendar(workDays) {
 
     calendar.render();
 }
+
+
 
 // -------------------- Status label --------------------
 function getStatusLabel(status){
@@ -209,13 +312,6 @@ function getColor(status) {
 
 // -------------------- Modal e salvataggio --------------------
 async function openDayModal(date, event=null){
-    // Se la sessione è scaduta, blocca
-    const session = supabaseClient.auth.getSession();
-    if(!session) {
-        Swal.fire({ icon: 'warning', title: 'Sessione scaduta', text: 'Effettua nuovamente il login.' });
-        return;
-    }
-
     const result = await Swal.fire({
         title: `Giorno ${date}`,
         html: `
@@ -253,6 +349,9 @@ async function openDayModal(date, event=null){
     );
 }
 
+
+
+
 // -------------------- Salvataggio e aggiornamento evento --------------------
 async function saveDay(date, status, note, giustificativo){
     try {
@@ -264,10 +363,12 @@ async function saveDay(date, status, note, giustificativo){
 
         if(error) return console.error(error);
 
+        // Aggiorna array locale
         const idx = allWorkDays.findIndex(d => d.date === data.date);
         if(idx >= 0) allWorkDays[idx] = data;
         else allWorkDays.push(data);
 
+        // Aggiorna evento in FullCalendar
         updateCalendarEvent(data);
 
     } catch(err) {
@@ -275,7 +376,10 @@ async function saveDay(date, status, note, giustificativo){
     }
 }
 
+
+
 function updateCalendarEvent(day) {
+    // Cerca evento per ID (meglio usare id del DB)
     let existing = calendar.getEventById(day.id?.toString());
 
     if (existing) {
@@ -284,6 +388,7 @@ function updateCalendarEvent(day) {
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
+        // Aggiorna HTML
         const el = existing.el;
         if(el){
             const showFlag = day.giustificativo && ['smart','ferie','supplementare'].includes(day.status);
@@ -296,6 +401,7 @@ function updateCalendarEvent(day) {
             `;
         }
     } else {
+        // Evento nuovo
         calendar.addEvent({
             id: day.id?.toString(),
             title: day.status,
@@ -309,6 +415,9 @@ function updateCalendarEvent(day) {
         });
     }
 }
+
+
+
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
