@@ -2,7 +2,7 @@ const Calendar = tui.Calendar;
 const container = document.getElementById('calendarToastUi');
 
 // Inizializzazione Calendario
-const calendar = new Calendar(container, {
+const calendarToastUi = new Calendar(container, {
   defaultView: 'week', // o 'month'
   useFormPopup: true,  // Popup integrato per creare eventi
   useDetailPopup: true,
@@ -27,11 +27,11 @@ async function fetchAndRenderEvents() {
         category: ev.category
     }));
 
-    calendar.createEvents(formatted);
+    calendarToastUi.createEvents(formatted);
 }
 
 // --- FUNZIONE: Salva nuovo evento ---
-calendar.on('beforeCreateEvent', async (eventData) => {
+calendarToastUi.on('beforeCreateEvent', async (eventData) => {
     const newEvent = {
         title: eventData.title,
         start_date: eventData.start.toISOString(),
@@ -45,7 +45,7 @@ calendar.on('beforeCreateEvent', async (eventData) => {
         .select();
 
     if (!error) {
-        calendar.createEvents([{ ...newEvent, id: data[0].id }]);
+        calendarToastUi.createEvents([{ ...newEvent, id: data[0].id }]);
     }
 });
 
