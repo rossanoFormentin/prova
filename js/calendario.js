@@ -240,6 +240,12 @@ async function saveDay(date, status, note, giustificativo){
 
         if(error) return console.error(error);
 
+        // Aggiorna array locale
+        const idx = allWorkDays.findIndex(d => d.date === data.date);
+        if(idx >= 0) allWorkDays[idx] = data;
+        else allWorkDays.push(data);
+
+        // Aggiorna evento in FullCalendar
         updateCalendarEvent(data);
 
     } catch(err) {
@@ -248,38 +254,31 @@ async function saveDay(date, status, note, giustificativo){
 }
 
 function updateCalendarEvent(day) {
-    const existing = calendar.getEvents().find(e => e.startStr === day.date);
+    // Cerca evento per ID (meglio usare id del DB)
+    let existing = calendar.getEventById(day.id?.toString());
 
     if (existing) {
-        // Aggiorna proprietà evento
         existing.setProp("title", day.status);
         existing.setProp("color", getColor(day.status));
         existing.setExtendedProp("note", day.note);
         existing.setExtendedProp("giustificativo", day.giustificativo);
 
-        // Forza il re-render dell'evento tramite setTimeout
-        setTimeout(() => {
-            const el = existing.el;
-            if(el){
-                const status = existing.title;
-                const note = existing.extendedProps.note || '';
-                const giustificativo = existing.extendedProps.giustificativo;
-                const showFlag = giustificativo && ['smart','ferie','supplementare'].includes(status);
-
-                el.innerHTML = `
-                    <div class="workday-card status-${status}">
-                        <div class="wd-status">${getStatusLabel(status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `;
-            }
-        }, 0);
-
+        // Aggiorna HTML
+        const el = existing.el;
+        if(el){
+            const showFlag = day.giustificativo && ['smart','ferie','supplementare'].includes(day.status);
+            el.innerHTML = `
+                <div class="workday-card status-${day.status}">
+                    <div class="wd-status">${getStatusLabel(day.status)}</div>
+                    ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
+                    ${day.note ? `<div class="wd-note">${day.note}</div>` : ''}
+                </div>
+            `;
+        }
     } else {
         // Evento nuovo
         calendar.addEvent({
-            id: day.id,
+            id: day.id?.toString(),
             title: day.status,
             start: day.date,
             allDay: true,
@@ -291,7 +290,6 @@ function updateCalendarEvent(day) {
         });
     }
 }
-
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
