@@ -106,8 +106,10 @@
 }
 
 .fc-day-today .fc-daygrid-day-number{
+    pointer-events: none; /* disabilita click */
     font-weight:bold;
     color:#0d6efd;
+
 }
 
 .fc-bg-event{
