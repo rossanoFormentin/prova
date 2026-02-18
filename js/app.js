@@ -6,7 +6,9 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ROUTES
 const routes = {
-    calendario: 'pages/calendario.html'
+    calendario: 'pages/calendario.html',
+    toastUi: 'pages/toastUi.html'
+
 };
 
 // ELEMENTI DOM
@@ -49,7 +51,9 @@ document.getElementById('btnLogout').onclick = async () => {
     checkUser();
 };
 
+
 // NAVIGAZIONE SPA
+
 async function loadPage(page) {
     const url = routes[page];
     const contentDiv = document.getElementById('dynamic-content');
@@ -59,12 +63,16 @@ async function loadPage(page) {
         return;
     }
 
+
     const response = await fetch(url);
     contentDiv.innerHTML = await response.text();
+
+
 
     // evidenzia bottone attivo
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+
 
     // Se pagina calendario, carica script
     if (page === "calendario") {
@@ -96,6 +104,7 @@ document.addEventListener('click', e => {
     const btn = e.target.closest('.nav-btn');
     if (btn) loadPage(btn.dataset.page);
 });
+
 
 // Controllo sessione all'avvio
 checkUser();
