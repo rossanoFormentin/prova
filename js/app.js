@@ -6,8 +6,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ROUTES
 const routes = {
-    calendario: 'pages/calendario.html',
-    toastUi: 'pages/toastUi.html'
+    calendario: 'pages/calendario.html'
+    
 
 };
 
@@ -86,23 +86,7 @@ async function loadPage(page) {
         }
     }
 
-    if (page === "toastUi") {
-        if (!document.getElementById('toastUi-script')) {
-
-            const script = document.createElement('script');
-            script.id = 'toastUi-script';
-            script.src = "js/toastUi.js";
-
-            script.onload = () => {
-                loadCalendariotoastUi(); // ← QUI
-            };
-
-            document.body.appendChild(script);
-
-        } else if (typeof loadCalendariotoastUi === "function") {
-            loadCalendariotoastUi();
-        }
-    }
+    
 }
 
 // Delegazione eventi sidebar
