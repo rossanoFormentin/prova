@@ -9,7 +9,7 @@ const routes = {
 };
 
 // -------------------- LOGOUT AUTOMATICO --------------------
-const LOGOUT_TIMEOUT = 1 * 60 * 1000; // 1 minuti in ms
+const LOGOUT_TIMEOUT = 30 * 60 * 1000; // 30 minuti in ms
 let logoutTimer = null;
 
 // -------------------- ELEMENTI DOM --------------------
