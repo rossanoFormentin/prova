@@ -9,7 +9,7 @@ const routes = {
 };
 
 // -------------------- LOGOUT AUTOMATICO --------------------
-const LOGOUT_TIMEOUT = 1 * 60 * 1000; // 1 minuti in ms
+const LOGOUT_TIMEOUT = 30 * 60 * 1000; // 30 minuti
 let logoutTimer = null;
 
 // -------------------- ELEMENTI DOM --------------------
@@ -39,7 +39,7 @@ document.getElementById('btnLogout').onclick = async () => {
 
 // -------------------- CHECK SESSIONE --------------------
 async function checkUser() {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
 
     if (session && session.user) {
         showApp(session.user);
@@ -54,7 +54,7 @@ function showLogin() {
     appSection.classList.add('hidden');
     document.body.classList.add("auth-layout");
 
-    if(logoutTimer) {
+    if (logoutTimer) {
         clearTimeout(logoutTimer);
         logoutTimer = null;
     }
@@ -72,7 +72,7 @@ function showApp(user) {
 
 // -------------------- LOGOUT AUTOMATICO --------------------
 function startLogoutTimer() {
-    if(logoutTimer) clearTimeout(logoutTimer);
+    if (logoutTimer) clearTimeout(logoutTimer);
 
     logoutTimer = setTimeout(async () => {
         await supabaseClient.auth.signOut();
@@ -81,14 +81,24 @@ function startLogoutTimer() {
     }, LOGOUT_TIMEOUT);
 }
 
-// -------------------- RESET TIMER SU INTERAZIONE --------------------
+// -------------------- RESET TIMER E REFRESH SESSIONE --------------------
 ['click','keydown','mousemove','scroll'].forEach(ev => {
-    document.addEventListener(ev, () => {
+    document.addEventListener(ev, async () => {
         if(appSection && !appSection.classList.contains('hidden')){
             startLogoutTimer();
+            await refreshSession();
         }
     });
 });
+
+// -------------------- REFRESH SESSIONE --------------------
+async function refreshSession() {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if(session){
+        // Aggiorna token interno Supabase
+        await supabaseClient.auth.refreshSession();
+    }
+}
 
 // -------------------- NAVIGAZIONE SPA --------------------
 async function loadPage(page) {
