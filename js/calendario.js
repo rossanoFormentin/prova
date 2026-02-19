@@ -174,7 +174,7 @@ function renderCalendar(workDays) {
 
                 link.replaceWith(span); // sostituisce <a> con <span>
             }
-        }
+        },
 
         
         
