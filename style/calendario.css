@@ -25,7 +25,7 @@
 /* Bottone Today */
 .fc-today-button {
     margin-left: 10px;
-    /*background-color: #d1e7dd;*/
+    background-color: #d1e7dd;
     border-radius: 5px;
     padding: 5px 10px;
 }
@@ -102,7 +102,7 @@
 }
 
 .fc-day-today {
-    background: rgba(13,110,253,0.08) !important;
+    background: rgb(249, 253, 13) !important;
     border-radius:8px;
 }
 
