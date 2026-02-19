@@ -214,11 +214,13 @@ function getColor(status) {
 }
 
 // -------------------- Modal e salvataggio --------------------
-/*
+
 async function openDayModal(date, event=null){
-    const result = await Swal.fire({
-        title: `Giorno ${date}`,
-        html: `
+
+    const htmlContent = `
+    <div class="modal-form">
+        <div class="form-group">
+            <label for="status"><strong>Stato:</strong></label>
             <select id="status" class="swal2-input">
                 <option value="presenza">Presenza</option>
                 <option value="smart">Smart Working</option>
@@ -226,45 +228,6 @@ async function openDayModal(date, event=null){
                 <option value="festivita">Festività</option>
                 <option value="supplementare">Supplementare</option>
                 <option value="scoperto">Scoperto</option>
-            </select>
-            <input id="note" class="swal2-input" placeholder="Note">
-            <label style="margin-top:5px">
-                <input type="checkbox" id="giustificativo"> Giustificativo
-            </label>
-        `,
-        showCancelButton: true,
-        confirmButtonText: "Salva",
-        didOpen: () => {
-            if(event){
-                document.getElementById("status").value = event.title;
-                document.getElementById("note").value = event.extendedProps.note || '';
-                document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
-            }
-        }
-    });
-
-    if(!result.isConfirmed) return;
-
-    await saveDay(
-        date,
-        document.getElementById("status").value,
-        document.getElementById("note").value,
-        document.getElementById("giustificativo").checked
-    );
-}*/
-
-async function openDayModal(date, event=null) {
-    const htmlContent = `
-    <div class="modal-form">
-        <div class="form-group">
-            <label for="status"><strong>Stato:</strong></label>
-            <select id="status" class="swal2-input status-select">
-                <option value="presenza" data-color="#198754">Presenza</option>
-                <option value="smart" data-color="#0d6efd">Smart Working</option>
-                <option value="ferie" data-color="#ffc107">Ferie</option>
-                <option value="festivita" data-color="#6c757d">Festività</option>
-                <option value="supplementare" data-color="#6610f2">Supplementare</option>
-                <option value="scoperto" data-color="#dc3545">Scoperto</option>
             </select>
         </div>
 
@@ -287,28 +250,11 @@ async function openDayModal(date, event=null) {
         showCancelButton: true,
         confirmButtonText: "Salva",
         didOpen: () => {
-            const statusSelect = Swal.getPopup().querySelector('#status');
-            const noteInput = Swal.getPopup().querySelector('#note');
-            const giustCheck = Swal.getPopup().querySelector('#giustificativo');
-
-            // Valorizza i campi se c'è un evento
             if(event){
-                statusSelect.value = event.title;
-                noteInput.value = event.extendedProps.note || '';
-                giustCheck.checked = event.extendedProps.giustificativo || false;
+                document.getElementById("status").value = event.title;
+                document.getElementById("note").value = event.extendedProps.note || '';
+                document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
             }
-
-            // Imposta il colore iniziale della select
-            const initColor = statusSelect.selectedOptions[0].dataset.color;
-            statusSelect.style.backgroundColor = initColor;
-            statusSelect.style.color = (initColor === '#ffc107') ? '#000' : '#fff';
-
-            // Cambia colore della select quando cambia lo stato
-            statusSelect.addEventListener('change', function() {
-                const color = this.selectedOptions[0].dataset.color;
-                this.style.backgroundColor = color;
-                this.style.color = (color === '#ffc107') ? '#000' : '#fff';
-            });
         }
     });
 
