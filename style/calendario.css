@@ -115,3 +115,47 @@
    background: #ffffff00 !important;
     
 }
+
+/* per il modale*/
+/* Contenitore modale */
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Form-group label */
+.modal-form .form-group label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+/* Input e select modale */
+.modal-form .swal2-input {
+    padding: 6px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* Select status colorato */
+.status-select {
+    font-weight: 600;
+    border: none;
+    color: #fff;
+    border-radius: 6px;
+}
+.status-select option[value="presenza"] { background:#198754; }
+.status-select option[value="smart"] { background:#0d6efd; }
+.status-select option[value="ferie"] { background:#ffc107; color:#000; }
+.status-select option[value="festivita"] { background:#6c757d; }
+.status-select option[value="supplementare"] { background:#6610f2; }
+.status-select option[value="scoperto"] { background:#dc3545; }
+
+/* Checkbox modale */
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}

@@ -17,88 +17,6 @@ async function loadCalendario() {
 }
 
 // -------------------- Render calendario --------------------
-/*function renderCalendar(workDays) {
-    const calendarEl = document.getElementById("calendar");
-    if (!calendarEl) return;
-
-    if (calendar) calendar.destroy();
-    calendarEl.innerHTML = '';
-
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'it',
-        height: 'auto',
-        weekends: false,
-        showNonCurrentDates: false,
-        fixedWeekCount: false,
-
-        headerToolbar: {
-            left: 'myPrev',
-            center: 'title',
-            right: 'myNext today'
-        },
-        customButtons: {
-            myPrev: { text: '← Mese precedente', click: () => calendar.prev() },
-            myNext: { text: 'Mese successivo →', click: () => calendar.next() }
-        },
-
-        events: getFilteredEvents(),
-
-        dayCellDidMount: function(info) {
-            const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
-            
-            if(numberLink){
-                const span = document.createElement('span');
-                span.textContent = numberLink.textContent;
-                numberLink.replaceWith(span);
-            }
-
-            
-        },
-
-        eventClick: info => openDayModal(info.event.startStr, info.event),
-        
-        //dateClick: function(info) {console.log("Cliccato giorno:", info.dateStr);},
-        
-        eventContent: function(arg) {
-            const status = arg.event.title;
-            const note = arg.event.extendedProps.note || '';
-            const giustificativo = arg.event.extendedProps.giustificativo;
-            const showFlag = giustificativo && ['smart','ferie','supplementare'].includes(status);
-
-            return {
-                html: `
-                    <div class="workday-card status-${status}" style="height:100%; width:100%; cursor:pointer;">
-                        <div class="wd-status">${getStatusLabel(status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `
-            };
-        },
-
-       
-        eventDidMount: function(info){
-            const color = getBGColor(info.event.title);
-            info.el.style.backgroundColor = color;
-            info.el.style.border = "none";
-            info.el.style.color = "#000";
-            info.el.style.boxShadow = "none";
-
-            // Tooltip
-            let text = info.event.extendedProps.note || '';
-            if(info.event.extendedProps.giustificativo &&
-                ['smart','ferie','supplementare'].includes(info.event.title)) {
-                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
-            }
-            if(text) info.el.setAttribute('title', text);
-        }
-    });
-
-    calendar.render();
-}
-*/
-
 function renderCalendar(workDays) {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -296,6 +214,7 @@ function getColor(status) {
 }
 
 // -------------------- Modal e salvataggio --------------------
+/*
 async function openDayModal(date, event=null){
     const result = await Swal.fire({
         title: `Giorno ${date}`,
@@ -332,7 +251,78 @@ async function openDayModal(date, event=null){
         document.getElementById("note").value,
         document.getElementById("giustificativo").checked
     );
+}*/
+
+async function openDayModal(date, event=null) {
+    const htmlContent = `
+    <div class="modal-form">
+        <div class="form-group">
+            <label for="status"><strong>Stato:</strong></label>
+            <select id="status" class="swal2-input status-select">
+                <option value="presenza" data-color="#198754">Presenza</option>
+                <option value="smart" data-color="#0d6efd">Smart Working</option>
+                <option value="ferie" data-color="#ffc107">Ferie</option>
+                <option value="festivita" data-color="#6c757d">Festività</option>
+                <option value="supplementare" data-color="#6610f2">Supplementare</option>
+                <option value="scoperto" data-color="#dc3545">Scoperto</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="note"><strong>Note:</strong></label>
+            <input id="note" class="swal2-input" placeholder="Inserisci note">
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label>
+                <input type="checkbox" id="giustificativo"> <strong>Giustificativo</strong>
+            </label>
+        </div>
+    </div>
+    `;
+
+    const result = await Swal.fire({
+        title: `Giorno ${date}`,
+        html: htmlContent,
+        showCancelButton: true,
+        confirmButtonText: "Salva",
+        didOpen: () => {
+            const statusSelect = Swal.getPopup().querySelector('#status');
+            const noteInput = Swal.getPopup().querySelector('#note');
+            const giustCheck = Swal.getPopup().querySelector('#giustificativo');
+
+            // Valorizza i campi se c'è un evento
+            if(event){
+                statusSelect.value = event.title;
+                noteInput.value = event.extendedProps.note || '';
+                giustCheck.checked = event.extendedProps.giustificativo || false;
+            }
+
+            // Imposta il colore iniziale della select
+            const initColor = statusSelect.selectedOptions[0].dataset.color;
+            statusSelect.style.backgroundColor = initColor;
+            statusSelect.style.color = (initColor === '#ffc107') ? '#000' : '#fff';
+
+            // Cambia colore della select quando cambia lo stato
+            statusSelect.addEventListener('change', function() {
+                const color = this.selectedOptions[0].dataset.color;
+                this.style.backgroundColor = color;
+                this.style.color = (color === '#ffc107') ? '#000' : '#fff';
+            });
+        }
+    });
+
+    if(!result.isConfirmed) return;
+
+    await saveDay(
+        date,
+        document.getElementById("status").value,
+        document.getElementById("note").value,
+        document.getElementById("giustificativo").checked
+    );
 }
+
+
 
 
 
