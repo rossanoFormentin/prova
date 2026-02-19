@@ -125,7 +125,7 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        dateClick: function(info) {},
+        //dateClick: function(info) {},
         //dateClick: info => openDayModal(info.dateStr),
 
         eventClick: info => openDayModal(info.event.startStr, info.event),
