@@ -117,46 +117,24 @@
 }
 
 /* per il modale*/
-/* Stili per il background della modale (oscuramento) */
-    .modal {
-        display: none; /* Nascosta di default */
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5); /* Sfondo semi-trasparente */
-    }
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-    /* Stili per la finestra modale bianca */
-    .modal-content {
-        background-color: #fefefe;
-        margin: 10% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 400px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-    /* Chiudi modale (X) */
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
+.form-label {
+    width: 120px; /* larghezza fissa colonna label */
+    text-align: left;
+    font-weight: 600;
+}
 
-    .close:hover { color: black; }
-
-    /* Stili dei campi form */
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-    
-    .button-group { text-align: right; margin-top: 20px; }
-    button { padding: 10px 15px; margin-left: 10px; cursor: pointer; }
-    .btn-save { background-color: #28a745; color: white; border: none; border-radius: 4px; }
-    .btn-cancel { background-color: #dc3545; color: white; border: none; border-radius: 4px; }
+.form-input {
+    flex: 1; /* prende il resto dello spazio */
+}
