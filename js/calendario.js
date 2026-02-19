@@ -216,9 +216,10 @@ function getColor(status) {
 // -------------------- Modal e salvataggio --------------------
 
 async function openDayModal(date, event=null){
-
-    const htmlContent = `
-            <select id="status" class="swal2-input">
+    const result = await Swal.fire({
+        title: `Giorno ${date}`,
+        html: `
+            <div>Stato:</div><select id="status" class="swal2-input">
                 <option value="presenza">Presenza</option>
                 <option value="smart">Smart Working</option>
                 <option value="ferie">Ferie</option>
@@ -230,14 +231,16 @@ async function openDayModal(date, event=null){
             <label style="margin-top:5px">
                 <input type="checkbox" id="giustificativo"> Giustificativo
             </label>
-    `;
-
-    
-    
-    const result = await Swal.fire({
-  
-        title: `Giorno ${date}`,
-        html: htmlContent,
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Salva",
+        didOpen: () => {
+            if(event){
+                document.getElementById("status").value = event.title;
+                document.getElementById("note").value = event.extendedProps.note || '';
+                document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
+            }
+        }
     });
 
     if(!result.isConfirmed) return;
@@ -249,8 +252,6 @@ async function openDayModal(date, event=null){
         document.getElementById("giustificativo").checked
     );
 }
-
-
 
 
 
