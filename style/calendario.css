@@ -130,11 +130,12 @@
 }
 
 .form-label {
-    width: 120px; /* larghezza fissa colonna label */
+    width: 130px; /* larghezza fissa colonna label */
     text-align: left;
     font-weight: 600;
 }
 
 .form-input {
     flex: 1; /* prende il resto dello spazio */
+    text-align: left;
 }
