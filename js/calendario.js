@@ -218,19 +218,14 @@ function getColor(status) {
 async function openDayModal(date, event=null){
 
     const htmlContent = `
-            <div class="form-row">
-    <div class="form-label">Stato:</div>
-    <div class="form-input">
-        <select id="status" class="swal2-input">
-            <option value="presenza">Presenza</option>
-            <option value="smart">Smart Working</option>
-            <option value="ferie">Ferie</option>
-            <option value="festivita">Festività</option>
-            <option value="supplementare">Supplementare</option>
-            <option value="scoperto">Scoperto</option>
-        </select>
-    </div>
-</div>
+            <select id="status" class="swal2-input">
+                <option value="presenza">Presenza</option>
+                <option value="smart">Smart Working</option>
+                <option value="ferie">Ferie</option>
+                <option value="festivita">Festività</option>
+                <option value="supplementare">Supplementare</option>
+                <option value="scoperto">Scoperto</option>
+            </select>
             <input id="note" class="swal2-input" placeholder="Note">
             <label style="margin-top:5px">
                 <input type="checkbox" id="giustificativo"> Giustificativo
