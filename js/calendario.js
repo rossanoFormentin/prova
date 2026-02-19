@@ -217,16 +217,8 @@ function getColor(status) {
 
 async function openDayModal(date, event=null){
 
-    const htmlContent = `<div id="myModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Dettagli Ordine</h3>
-        <hr>
-        
-        <!-- Contenuto del form -->
-        <div class="form-group">
-            <label for="tipoProdotto">Prodotto:</label>
-            <select id="status">
+    const htmlContent = `
+            <select id="status" class="swal2-input">
                 <option value="presenza">Presenza</option>
                 <option value="smart">Smart Working</option>
                 <option value="ferie">Ferie</option>
@@ -234,35 +226,54 @@ async function openDayModal(date, event=null){
                 <option value="supplementare">Supplementare</option>
                 <option value="scoperto">Scoperto</option>
             </select>
+            <input id="note" class="swal2-input" placeholder="Note">
+            <label style="margin-top:5px">
+                <input type="checkbox" id="giustificativo"> Giustificativo
+            </label>
+    `;
+
+    
+    const htmlContent2 = `<div class="modal-form">
+        <div class="form-row">
+            <div class="form-label">
+                <label for="status">Stato:</label>
+            </div>
+            <div class="form-input">
+                <select id="status" class="swal2-input">
+                    <option value="presenza">Presenza</option>
+                    <option value="smart">Smart Working</option>
+                    <option value="ferie">Ferie</option>
+                    <option value="festivita">Festività</option>
+                    <option value="supplementare">Supplementare</option>
+                    <option value="scoperto">Scoperto</option>
+                </select>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="note">Note:</label>
-            <textarea id="note" rows="4" placeholder="Inserisci note"></textarea>
+        <div class="form-row">
+            <div class="form-label">
+                <label for="note">Note:</label>
+            </div>
+            <div class="form-input">
+                <input id="note" class="swal2-input" placeholder="Note">
+            </div>
         </div>
 
-        <div class="form-group">
-            <input type="checkbox" id="giustificativo" name="giustificativo">
-            <label for="giustificativo" style="display:inline;">Giustificativo</label>
+        <div class="form-row">
+            <div class="form-label">
+                <label>Giustificativo:</label>
+            </div>
+            <div class="form-input">
+                <input type="checkbox" id="giustificativo">
+            </div>
         </div>
-
-        
     </div>
-</div>
     `;
 
     const result = await Swal.fire({
+  
         title: `Giorno ${date}`,
-        html: htmlContent,
-        showCancelButton: true,
-        confirmButtonText: "Salva",
-        didOpen: () => {
-            if(event){
-                document.getElementById("status").value = event.title;
-                document.getElementById("note").value = event.extendedProps.note || '';
-                document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
-            }
-        }
+        html: htmlContent2,
     });
 
     if(!result.isConfirmed) return;
