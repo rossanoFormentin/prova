@@ -53,17 +53,12 @@ function renderCalendar(workDays) {
                 numberLink.replaceWith(span);
             }
 
-            // click su tutta la cella
-            /*info.el.addEventListener('click', (e) => {
-                if(!e.target.closest('.fc-event')) {
-                    openDayModal(info.dateStr);
-                }
-            });*/
+            
         },
 
         eventClick: info => openDayModal(info.event.startStr, info.event),
         
-        dateClick: function(info) {console.log("Cliccato giorno:", info.dateStr);},
+        //dateClick: function(info) {console.log("Cliccato giorno:", info.dateStr);},
         
         eventContent: function(arg) {
             const status = arg.event.title;
