@@ -125,11 +125,43 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        //dateClick: function(info) {},
-        //dateClick: info => openDayModal(info.dateStr),
+        /*dayCellDidMount: function(info) {
+            const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
+            
+            if(numberLink){
+                const span = document.createElement('span');
+                span.textContent = numberLink.textContent;
+                numberLink.replaceWith(span);
+            }
+
+            // click su tutta la cella
+            info.el.addEventListener('click', (e) => {
+                if(!e.target.closest('.fc-event')) {
+                    openDayModal(info.dateStr);
+                }
+            });
+        },*/
+
+        dayCellDidMount: function(info) {
+            const top = info.el.querySelector('.fc-daygrid-day-top');
+            const link = info.el.querySelector('.fc-daygrid-day-number');
+
+            if (top && link) {
+                const dayNumber = link.textContent;
+                top.innerHTML = '';
+
+                const span = document.createElement('span');
+                span.className = 'fc-day-number-custom';
+                span.textContent = dayNumber;
+
+                top.appendChild(span);
+            }
+        },
 
         eventClick: info => openDayModal(info.event.startStr, info.event),
-
+        
+        dateClick: function(info) {console.log("Cliccato giorno:", info.dateStr);},
+        
         eventContent: function(arg) {
             const status = arg.event.title;
             const note = arg.event.extendedProps.note || '';
@@ -147,30 +179,7 @@ function renderCalendar(workDays) {
             };
         },
 
-        dayCellDidMount: function(info) {
-            const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
-            
-            if(numberLink){
-                const span = document.createElement('span');
-                span.textContent = numberLink.textContent;
-                numberLink.replaceWith(span);
-            }
-
-            // click su tutta la cella
-            info.el.addEventListener('click', (e) => {
-                if(!e.target.closest('.fc-event')) {
-                    openDayModal(info.dateStr);
-                }
-            });
-        },
-
-        
-        
-
-        
-        
-
-
+       
         eventDidMount: function(info){
             const color = getBGColor(info.event.title);
             info.el.style.backgroundColor = color;
