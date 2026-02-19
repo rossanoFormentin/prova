@@ -217,11 +217,16 @@ function getColor(status) {
 
 async function openDayModal(date, event=null){
 
-    const htmlContent = `
-    <div class="modal-form">
+    const htmlContent = `<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Dettagli Ordine</h3>
+        <hr>
+        
+        <!-- Contenuto del form -->
         <div class="form-group">
-            <label for="status"><strong>Stato:</strong></label>
-            <select id="status" class="swal2-input">
+            <label for="tipoProdotto">Prodotto:</label>
+            <select id="status">
                 <option value="presenza">Presenza</option>
                 <option value="smart">Smart Working</option>
                 <option value="ferie">Ferie</option>
@@ -232,16 +237,18 @@ async function openDayModal(date, event=null){
         </div>
 
         <div class="form-group">
-            <label for="note"><strong>Note:</strong></label>
-            <input id="note" class="swal2-input" placeholder="Inserisci note">
+            <label for="note">Note:</label>
+            <textarea id="note" rows="4" placeholder="Inserisci note"></textarea>
         </div>
 
         <div class="form-group">
-            <label for="note"><strong>Giustificativo:</strong></label>
-            <input type="checkbox" id="giustificativo">
-            
+            <input type="checkbox" id="conferma" name="conferma">
+            <label for="conferma" style="display:inline;">Giustificativo</label>
         </div>
+
+        
     </div>
+</div>
     `;
 
     const result = await Swal.fire({
