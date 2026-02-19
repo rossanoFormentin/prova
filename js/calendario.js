@@ -242,8 +242,8 @@ async function openDayModal(date, event=null){
         </div>
 
         <div class="form-group">
-            <input type="checkbox" id="conferma" name="conferma">
-            <label for="conferma" style="display:inline;">Giustificativo</label>
+            <input type="checkbox" id="giustificativo" name="giustificativo">
+            <label for="giustificativo" style="display:inline;">Giustificativo</label>
         </div>
 
         
