@@ -218,14 +218,19 @@ function getColor(status) {
 async function openDayModal(date, event=null){
 
     const htmlContent = `
-            <select id="status" class="swal2-input">
-                <option value="presenza">Presenza</option>
-                <option value="smart">Smart Working</option>
-                <option value="ferie">Ferie</option>
-                <option value="festivita">Festività</option>
-                <option value="supplementare">Supplementare</option>
-                <option value="scoperto">Scoperto</option>
-            </select>
+            <div class="form-row">
+    <div class="form-label">Stato:</div>
+    <div class="form-input">
+        <select id="status" class="swal2-input">
+            <option value="presenza">Presenza</option>
+            <option value="smart">Smart Working</option>
+            <option value="ferie">Ferie</option>
+            <option value="festivita">Festività</option>
+            <option value="supplementare">Supplementare</option>
+            <option value="scoperto">Scoperto</option>
+        </select>
+    </div>
+</div>
             <input id="note" class="swal2-input" placeholder="Note">
             <label style="margin-top:5px">
                 <input type="checkbox" id="giustificativo"> Giustificativo
@@ -233,47 +238,11 @@ async function openDayModal(date, event=null){
     `;
 
     
-    const htmlContent2 = `<div class="modal-form">
-        <div class="form-row">
-            <div class="form-label">
-                <label for="status">Stato:</label>
-            </div>
-            <div class="form-input">
-                <select id="status" class="swal2-input">
-                    <option value="presenza">Presenza</option>
-                    <option value="smart">Smart Working</option>
-                    <option value="ferie">Ferie</option>
-                    <option value="festivita">Festività</option>
-                    <option value="supplementare">Supplementare</option>
-                    <option value="scoperto">Scoperto</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-label">
-                <label for="note">Note:</label>
-            </div>
-            <div class="form-input">
-                <input id="note" class="swal2-input" placeholder="Note">
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-label">
-                <label>Giustificativo:</label>
-            </div>
-            <div class="form-input">
-                <input type="checkbox" id="giustificativo">
-            </div>
-        </div>
-    </div>
-    `;
-
+    
     const result = await Swal.fire({
   
         title: `Giorno ${date}`,
-        html: htmlContent2,
+        html: htmlContent,
     });
 
     if(!result.isConfirmed) return;
