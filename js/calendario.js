@@ -147,20 +147,8 @@ function renderCalendar(workDays) {
         },
 
         /*dayCellDidMount: function(info) {
-            // Rimuove il link del numero giorno
-            const a = info.el.querySelector('.fc-daygrid-day-number a');
-            if(a) a.replaceWith(document.createTextNode(a.textContent));
-
-            // Click su tutta la cella
-            info.el.addEventListener('click', (e) => {
-                // Ignora click su eventi già renderizzati
-                if(!e.target.closest('.fc-event')) {
-                    openDayModal(info.dateStr);
-                }
-            });
-        },*/
-        dayCellDidMount: function(info) {
             const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
+            
             if(numberLink){
                 const span = document.createElement('span');
                 span.textContent = numberLink.textContent;
@@ -173,7 +161,21 @@ function renderCalendar(workDays) {
                     openDayModal(info.dateStr);
                 }
             });
-        },
+        },*/
+
+        dayCellDidMount: function(info) {
+
+            const link = info.el.querySelector('.fc-daygrid-day-number');
+
+            if (link) {
+                const span = document.createElement('span');
+                span.className = 'fc-daygrid-day-number';
+                span.textContent = link.textContent;
+
+                link.replaceWith(span); // sostituisce <a> con <span>
+            }
+        }
+
         
         
 
