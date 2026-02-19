@@ -165,16 +165,26 @@ function renderCalendar(workDays) {
 
         dayCellDidMount: function(info) {
 
+            const top = info.el.querySelector('.fc-daygrid-day-top');
             const link = info.el.querySelector('.fc-daygrid-day-number');
 
-            if (link) {
+            if (top && link) {
+
+                // prendi il numero
+                const dayNumber = link.textContent;
+
+                // svuota completamente il contenitore
+                top.innerHTML = '';
+
+                // ricrea il numero come testo (non link)
                 const span = document.createElement('span');
                 span.className = 'fc-daygrid-day-number';
-                span.textContent = link.textContent;
+                span.textContent = dayNumber;
 
-                link.replaceWith(span); // sostituisce <a> con <span>
+                top.appendChild(span);
             }
         },
+        
 
         
         
