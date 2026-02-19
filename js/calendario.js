@@ -125,7 +125,7 @@ function renderCalendar(workDays) {
 
         events: getFilteredEvents(),
 
-        /*dayCellDidMount: function(info) {
+        dayCellDidMount: function(info) {
             const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
             
             if(numberLink){
@@ -140,22 +140,6 @@ function renderCalendar(workDays) {
                     openDayModal(info.dateStr);
                 }
             });
-        },*/
-
-        dayCellDidMount: function(info) {
-            const top = info.el.querySelector('.fc-daygrid-day-top');
-            const link = info.el.querySelector('.fc-daygrid-day-number');
-
-            if (top && link) {
-                const dayNumber = link.textContent;
-                top.innerHTML = '';
-
-                const span = document.createElement('span');
-                span.className = 'fc-day-number-custom';
-                span.textContent = dayNumber;
-
-                top.appendChild(span);
-            }
         },
 
         eventClick: info => openDayModal(info.event.startStr, info.event),
