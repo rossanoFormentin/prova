@@ -236,10 +236,10 @@ async function openDayModal(date, event=null){
             <input id="note" class="swal2-input" placeholder="Inserisci note">
         </div>
 
-        <div class="form-group checkbox-group">
-            <label>
-                <input type="checkbox" id="giustificativo"> <strong>Giustificativo</strong>
-            </label>
+        <div class="form-group">
+            <label for="note"><strong>Giustificativo:</strong></label>
+            <input type="checkbox" id="giustificativo">
+            
         </div>
     </div>
     `;
