@@ -25,7 +25,7 @@
 /* Bottone Today */
 .fc-today-button {
     margin-left: 10px;
-    background-color: #d1e7dd;
+    /*background-color: #d1e7dd;*/
     border-radius: 5px;
     padding: 5px 10px;
 }
@@ -42,6 +42,7 @@
     border-radius: 5px;
     box-shadow: 0 0 8px 3px rgba(0,0,0,0.4);
 }
+
 .current-day-presenza { border-color: #198754; }
 .current-day-smart { border-color: #0d6efd; }
 .current-day-ferie { border-color: #ffc107; }
