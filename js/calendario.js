@@ -17,87 +17,6 @@ async function loadCalendario() {
 }
 
 // -------------------- Render calendario --------------------
-/*function renderCalendar(workDays) {
-    const calendarEl = document.getElementById("calendar");
-    if (!calendarEl) return;
-
-    if (calendar) calendar.destroy();
-    calendarEl.innerHTML = '';
-
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'it',
-        height: 'auto',
-        weekends: false,
-        showNonCurrentDates: false,
-        fixedWeekCount: false,
-
-        headerToolbar: {
-            left: 'myPrev',
-            center: 'title',
-            right: 'myNext today'
-        },
-        customButtons: {
-            myPrev: { text: '← Mese precedente', click: () => calendar.prev(), classNames: ['fc-myPrev-button'] },
-            myNext: { text: 'Mese successivo →', click: () => calendar.next(), classNames: ['fc-myNext-button'] }
-        },
-
-        events: getFilteredEvents(),
-
-        dateClick: info => openDayModal(info.dateStr),
-        eventClick: info => openDayModal(info.event.startStr, info.event),
-
-        eventContent: function(arg) {
-            const status = arg.event.title;
-            const note = arg.event.extendedProps.note || '';
-            const giustificativo = arg.event.extendedProps.giustificativo;
-            const showFlag = giustificativo && ['smart', 'ferie', 'supplementare'].includes(status);
-
-            return {
-                html: `
-                    <div class="workday-card status-${status}">
-                        <div class="wd-status">${getStatusLabel(status)}</div>
-                        ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
-                    </div>
-                `
-            };
-        },
-
-        dayCellClassNames: function(arg) {
-            const todayStr = new Date().toDateString();
-            if(arg.date.toDateString() === todayStr){
-                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
-                if(todayEvent){
-                    return ['current-day-border', `current-day-${todayEvent.status}`];
-                } else {
-                    return ['current-day-border', 'current-day-default'];
-                }
-            }
-            return [];
-        },
-
-        eventDidMount: function(info){
-            const color = getBGColor(info.event.title);
-            info.el.style.backgroundColor = color;
-            info.el.style.border = "none";
-            info.el.style.color = "#000";
-            info.el.style.boxShadow = "none";
-
-            // Tooltip
-            let text = info.event.extendedProps.note || '';
-            if(info.event.extendedProps.giustificativo &&
-                ['smart','ferie','supplementare'].includes(info.event.title)) {
-                text = '✅ Giustificativo' + (text ? ' - ' + text : '');
-            }
-            if(text) info.el.setAttribute('title', text);
-        }
-    });
-
-    calendar.render();
-}
-*/
-
 function renderCalendar(workDays) {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) return;
@@ -135,11 +54,11 @@ function renderCalendar(workDays) {
             }
 
             // click su tutta la cella
-            info.el.addEventListener('click', (e) => {
+            /*info.el.addEventListener('click', (e) => {
                 if(!e.target.closest('.fc-event')) {
                     openDayModal(info.dateStr);
                 }
-            });
+            });*/
         },
 
         eventClick: info => openDayModal(info.event.startStr, info.event),
