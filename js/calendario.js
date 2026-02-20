@@ -253,10 +253,22 @@ function countSmartInMonth(date) {
     return allWorkDays.filter(d => d.status === 'smart' && new Date(d.date) >= start && new Date(d.date) <= end).length;
 }
 
-// -------------------- Aggiorna conteggi legenda --------------------
+// -------------------- Aggiorna conteggi legenda solo per il mese corrente --------------------
 function updateLegendCounts() {
+    if (!calendar) return;
+
+    // mese e anno correnti visibili nel calendario
+    const view = calendar.view;
+    const startMonth = view.currentStart.getMonth();
+    const startYear = view.currentStart.getFullYear();
+
     ['presenza','smart','ferie','festivita','scoperto','supplementare'].forEach(status => {
-        const count = allWorkDays.filter(d => d.status === status).length;
+        // filtra solo i giorni del mese corrente
+        const count = allWorkDays.filter(d => {
+            const dDate = new Date(d.date);
+            return d.status === status && dDate.getMonth() === startMonth && dDate.getFullYear() === startYear;
+        }).length;
+
         const el = document.querySelector(`.legend-item[data-status="${status}"] .count`);
         if(el) el.textContent = count;
     });
