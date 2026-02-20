@@ -1,7 +1,6 @@
 let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
-const SMART_MAX = 10;
 
 // -------------------- Carica dati dal DB --------------------
 async function loadCalendario() {
@@ -15,8 +14,6 @@ async function loadCalendario() {
     allWorkDays = data;
     renderCalendar(allWorkDays);
     setupLegendFilter();
-    updateLegendCounts();
-    updateNextWorkdayAlert();
 }
 
 // -------------------- Render calendario --------------------
@@ -46,15 +43,6 @@ function renderCalendar(workDays) {
         },
 
         events: getFilteredEvents(),
-
-        dayCellDidMount: function(info) {
-            const numberLink = info.el.querySelector('.fc-daygrid-day-number a');
-            if(numberLink){
-                const span = document.createElement('span');
-                span.textContent = numberLink.textContent;
-                numberLink.replaceWith(span);
-            }
-        },
 
         eventClick: function(info) {
             if(info.event.display !== 'background') {
@@ -92,48 +80,45 @@ function renderCalendar(workDays) {
                 text = '✅ Giustificativo' + (text ? ' - ' + text : '');
             }
             if(text) info.el.setAttribute('title', text);
+        },
+
+        dayCellClassNames: function(arg) {
+            const todayStr = new Date().toDateString();
+            if(arg.date.toDateString() === todayStr){
+                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
+                if(todayEvent){
+                    return ['current-day-border', `current-day-${todayEvent.status}`];
+                } else {
+                    return ['current-day-border', 'current-day-default'];
+                }
+            }
+            return [];
+        },
+
+        // Aggiorna contatori ogni volta che cambiamo mese
+        datesSet: function(info){
+            updateLegendCounts(info.start, info.end);
         }
     });
 
     calendar.render();
-    updateLegendCounts();
-    updateNextWorkdayAlert();
+    // inizializza contatori per il mese corrente
+    const view = calendar.view;
+    updateLegendCounts(view.activeStart, view.activeEnd);
 }
 
-// -------------------- Status label --------------------
-function getStatusLabel(status){
-    switch(status){
-        case "presenza": return "Presenza";
-        case "smart": return "Smart Working";
-        case "ferie": return "Ferie";
-        case "festivita": return "Festività";
-        case "scoperto": return "Scoperto";
-        case "supplementare": return "Supplementare";
-        default: return status;
-    }
-}
+// -------------------- Aggiorna conteggi legenda per mese --------------------
+function updateLegendCounts(startDate, endDate) {
+    const counts = {};
+    ['presenza','smart','ferie','festivita','scoperto','supplementare'].forEach(status => {
+        counts[status] = allWorkDays.filter(d => {
+            const day = new Date(d.date);
+            return d.status === status && day >= startDate && day < endDate;
+        }).length;
 
-// -------------------- Eventi filtrati --------------------
-function getFilteredEvents() {
-    let filtered = allWorkDays;
-    if (activeStatusFilter) filtered = filtered.filter(d => d.status === activeStatusFilter);
-
-    const bgEvents = filtered.map(d => ({
-        start: d.date,
-        display: 'background',
-        color: getBGColor(d.status)
-    }));
-
-    const events = filtered.map(d => ({
-        id: d.id,
-        title: d.status,
-        start: d.date,
-        allDay: true,
-        color: getColor(d.status),
-        extendedProps: { note: d.note, giustificativo: d.giustificativo || false }
-    }));
-
-    return [...bgEvents, ...events];
+        const el = document.querySelector(`.legend-item[data-status="${status}"] .count`);
+        if(el) el.textContent = counts[status];
+    });
 }
 
 // -------------------- Setup legenda cliccabile --------------------
@@ -165,149 +150,31 @@ function highlightLegend(){
     });
 }
 
-// -------------------- Colori --------------------
-function getBGColor(status) {
-    switch(status){
-        case "presenza": return "#d1e7dd";
-        case "smart": return "#cfe2ff";
-        case "ferie": return "#fff3cd";
-        case "festivita": return "#e2e3e5";
-        case "scoperto": return "#f8d7da";
-        case "supplementare": return "#e5dbff";
-        default: return "";
-    }
-}
+// -------------------- Eventi filtrati --------------------
+function getFilteredEvents() {
+    let filtered = allWorkDays;
 
-function getColor(status) {
-    switch(status){
-        case "presenza": return "#198754";
-        case "smart": return "#0d6efd";
-        case "ferie": return "#ffc107";
-        case "festivita": return "#6c757d";
-        case "scoperto": return "#dc3545";
-        case "supplementare": return "#6610f2";
-        default: return "#adb5bd";
-    }
-}
-
-// -------------------- Salvataggio --------------------
-async function saveDay(date, status, note, giustificativo){
-
-    // Limite 10 giorni smart
-    if(status === 'smart') {
-        let count = countSmartInMonth(new Date(date));
-        const existing = allWorkDays.find(d => d.date === date);
-        if(existing && existing.status === 'smart') count--;
-        if(count >= SMART_MAX){
-            alert('Non puoi avere più di 10 giorni di Smart Working in questo mese.');
-            return;
-        }
+    if (activeStatusFilter) {
+        filtered = filtered.filter(d => d.status === activeStatusFilter);
     }
 
-    try {
-        const { data, error } = await supabaseClient
-            .from("work_days")
-            .upsert({ date, status, note, giustificativo }, { onConflict: "date" })
-            .select()
-            .single();
+    const bgEvents = filtered.map(d => ({
+        start: d.date,
+        display: 'background',
+        color: getBGColor(d.status)
+    }));
 
-        if(error) return console.error(error);
+    const events = filtered.map(d => ({
+        id: d.id,
+        title: d.status,
+        start: d.date,
+        allDay: true,
+        color: getColor(d.status),
+        extendedProps: { note: d.note, giustificativo: d.giustificativo }
+    }));
 
-        const idx = allWorkDays.findIndex(d => d.date === data.date);
-        if(idx >= 0) allWorkDays[idx] = data;
-        else allWorkDays.push(data);
-
-        updateCalendarEvent(data);
-        updateLegendCounts();
-        updateNextWorkdayAlert();
-    } catch(err) {
-        console.error(err);
-    }
+    return [...bgEvents, ...events];
 }
-
-// -------------------- Aggiorna evento --------------------
-function updateCalendarEvent(day) {
-    let existing = calendar.getEventById(day.id?.toString());
-
-    if (existing) {
-        existing.setProp("title", day.status);
-        existing.setProp("color", getColor(day.status));
-        existing.setExtendedProp("note", day.note);
-        existing.setExtendedProp("giustificativo", day.giustificativo);
-    } else {
-        calendar.addEvent({
-            id: day.id?.toString(),
-            title: day.status,
-            start: day.date,
-            allDay: true,
-            color: getColor(day.status),
-            extendedProps: { note: day.note, giustificativo: day.giustificativo }
-        });
-    }
-}
-
-// -------------------- Conteggio smart nel mese --------------------
-function countSmartInMonth(date) {
-    const start = new Date(date.getFullYear(), date.getMonth(), 1);
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    return allWorkDays.filter(d => d.status === 'smart' && new Date(d.date) >= start && new Date(d.date) <= end).length;
-}
-
-// -------------------- Aggiorna conteggi legenda solo per il mese corrente --------------------
-function updateLegendCounts() {
-    if (!calendar) return;
-
-    // mese e anno correnti visibili nel calendario
-    const view = calendar.view;
-    const startMonth = view.currentStart.getMonth();
-    const startYear = view.currentStart.getFullYear();
-
-    ['presenza','smart','ferie','festivita','scoperto','supplementare'].forEach(status => {
-        // filtra solo i giorni del mese corrente
-        const count = allWorkDays.filter(d => {
-            const dDate = new Date(d.date);
-            return d.status === status && dDate.getMonth() === startMonth && dDate.getFullYear() === startYear;
-        }).length;
-
-        const el = document.querySelector(`.legend-item[data-status="${status}"] .count`);
-        if(el) el.textContent = count;
-    });
-}
-
-// -------------------- Giorno lavorativo successivo --------------------
-function getNextWorkday(date) {
-    const next = new Date(date);
-    next.setDate(next.getDate() + 1);
-    while(next.getDay() === 0 || next.getDay() === 6){
-        next.setDate(next.getDate() + 1);
-    }
-    return next;
-}
-
-// -------------------- Avviso giustificativo --------------------
-function updateNextWorkdayAlert(){
-    const alertEl = document.getElementById('next-workday-alert');
-    if(!alertEl) return;
-
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0,10);
-    const todayEvent = allWorkDays.find(d => d.date === todayStr);
-
-    const nextWorkday = getNextWorkday(today);
-    const nextStr = nextWorkday.toISOString().slice(0,10);
-    const nextEvent = allWorkDays.find(d => d.date === nextStr);
-
-    if(todayEvent?.giustificativo && nextEvent &&
-       ['smart','ferie','supplementare'].includes(nextEvent.status) &&
-       !nextEvent.giustificativo) {
-        alertEl.textContent = `Attenzione: oggi hai il giustificativo e il prossimo giorno lavorativo (${nextStr}) è previsto ${getStatusLabel(nextEvent.status)} senza giustificativo.`;
-    } else {
-        alertEl.textContent = '';
-    }
-}
-
-// -------------------- Avvia calendario --------------------
-loadCalendario();
 
 /*
 let calendar;
