@@ -423,5 +423,30 @@ function countSmartInMonth(date) {
     ).length;
 }
 
+function checkTomorrowGiustificativo() {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0,10);
+
+    const todayStr = today.toISOString().slice(0,10);
+    const todayEvent = allWorkDays.find(d => d.date === todayStr);
+
+    if(!todayEvent || !todayEvent.giustificativo) return; // nessun giustificativo oggi, esci
+
+    const tomorrowEvent = allWorkDays.find(d => d.date === tomorrowStr);
+    if(tomorrowEvent && ['smart','ferie','supplementare'].includes(tomorrowEvent.status)) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Attenzione Giustificativo',
+            text: `Oggi (${todayStr}) hai il giustificativo, e domani (${tomorrowStr}) è previsto ${getStatusLabel(tomorrowEvent.status)}.`,
+            confirmButtonText: 'Ok'
+        });
+    }
+}
+
 // -------------------- Avvia calendario --------------------
-loadCalendario();
+//loadCalendario();
+loadCalendario().then(() => {
+    checkTomorrowGiustificativo();
+});
