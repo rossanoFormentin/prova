@@ -216,9 +216,8 @@ function getColor(status) {
 // -------------------- Modal e salvataggio --------------------
 
 async function openDayModal(date, event=null){
-    const result = await Swal.fire({
-        title: `Giorno ${date}`,
-        html: `
+
+    const templateHtml = `
             <div class="form-row">
                 <div class="form-label">Stato:</div>
                 <div class="form-input">
@@ -244,7 +243,40 @@ async function openDayModal(date, event=null){
                     <input type="checkbox" id="giustificativo">
                 </div>
             </div>
-        `,
+        `;
+
+    const templateHtml2 =`<form>
+    <table class="form-table">
+        
+
+        <tr>
+            <td><label for="stato">Stato</label></td>
+            <td>
+                <select id="status" class="swal2-input">
+                        <option value="presenza">Presenza</option>
+                        <option value="smart">Smart Working</option>
+                        <option value="ferie">Ferie</option>
+                        <option value="festivita">Festività</option>
+                        <option value="supplementare">Supplementare</option>
+                        <option value="scoperto">Scoperto</option>
+                </select>
+            </td>
+        </tr>
+
+        <tr>
+            <td><label for="note">Note</label></td>
+            <td><input type="text" id="note" name="note"></td>
+        </tr>
+        <tr>
+            <td><label for="giustificativo">Giustificativo</label></td>
+            <td><input type="checkbox" id="giustificativo" name="giustificativo"></td>
+        </tr>
+    </table>
+</form>`;
+
+    const result = await Swal.fire({
+        title: `Giorno ${date}`,
+        html: templateHtml2,
         showCancelButton: true,
         confirmButtonText: "Salva",
         didOpen: () => {
