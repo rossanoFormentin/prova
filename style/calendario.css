@@ -117,24 +117,25 @@
 }
 
 /* per il modale*/
-.modal-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.form-table {
+    border-collapse: collapse;
+    margin: 0;              /* niente centratura */
 }
 
-.form-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.form-table td {
+    padding: 6px 10px;
+    text-align: left;       /* testo a sinistra */
+    vertical-align: middle;
 }
 
-.form-label {
-    width: 130px; /* larghezza fissa colonna label */
-    text-align: left;
-    font-weight: 600;
+.form-table .label {
+    width: 140px;           /* colonna etichette fissa */
+    font-weight: bold;
 }
 
-.form-input {
-    text-align: left;
+.form-table input,
+.form-table select {
+    display: block;
+    margin: 0;              /* evita centrature automatiche */
+    width: 250px;
 }

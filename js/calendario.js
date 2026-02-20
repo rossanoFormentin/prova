@@ -250,7 +250,7 @@ async function openDayModal(date, event=null){
         
 
         <tr>
-            <td><label for="stato">Stato</label></td>
+            <td><label for="stato">Stato:</label></td>
             <td>
                 <select id="status" class="swal2-input">
                         <option value="presenza">Presenza</option>
@@ -264,11 +264,11 @@ async function openDayModal(date, event=null){
         </tr>
 
         <tr>
-            <td><label for="note">Note</label></td>
+            <td><label for="note">Note:</label></td>
             <td><input type="text" id="note" name="note"></td>
         </tr>
         <tr>
-            <td><label for="giustificativo">Giustificativo</label></td>
+            <td><label for="giustificativo">Giustificativo:</label></td>
             <td><input type="checkbox" id="giustificativo" name="giustificativo"></td>
         </tr>
     </table>
