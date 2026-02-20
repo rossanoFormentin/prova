@@ -267,7 +267,7 @@ async function openDayModal(date, event=null){
             <td><label for="note">Note:</label></td>
             <td><input type="text" id="note" name="note"></td>
         </tr>
-        <tr>
+        <tr id="row-giustificativo">
             <td><label for="giustificativo">Giustificativo:</label></td>
             <td><input type="checkbox" id="giustificativo" name="giustificativo"></td>
         </tr>
@@ -279,13 +279,34 @@ async function openDayModal(date, event=null){
         html: templateHtml2,
         showCancelButton: true,
         confirmButtonText: "Salva",
-        didOpen: () => {
+        
+        /*didOpen: () => {
             if(event){
                 document.getElementById("status").value = event.title;
                 document.getElementById("note").value = event.extendedProps.note || '';
                 document.getElementById("giustificativo").checked = event.extendedProps.giustificativo || false;
             }
+        }*/
+
+        didOpen: () => {
+
+            const statusSelect = document.getElementById("status");
+
+            if(event){
+                statusSelect.value = event.title;
+                document.getElementById("note").value =
+                    event.extendedProps.note || '';
+                document.getElementById("giustificativo").checked =
+                    event.extendedProps.giustificativo || false;
+            }
+
+            // listener cambio stato
+            statusSelect.addEventListener("change", toggleGiustificativo);
+
+            // controllo iniziale
+            toggleGiustificativo();
         }
+
     });
 
     if(!result.isConfirmed) return;
@@ -298,7 +319,21 @@ async function openDayModal(date, event=null){
     );
 }
 
+function toggleGiustificativo() {
+    const status = document.getElementById("status").value;
+    const row = document.getElementById("row-giustificativo");
 
+    if (!row) return;
+
+    if (status === "presenza") {
+        row.style.display = "none";
+
+        // opzionale: deseleziona automaticamente
+        document.getElementById("giustificativo").checked = false;
+    } else {
+        row.style.display = "table-row";
+    }
+}
 
 
 // -------------------- Salvataggio e aggiornamento evento --------------------
