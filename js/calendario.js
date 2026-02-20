@@ -1,6 +1,7 @@
 let calendar;
 let allWorkDays = [];
 let activeStatusFilter = null; // legenda/filtro attivo
+const SMART_MAX = 10;
 
 // -------------------- Carica dati dal DB --------------------
 async function loadCalendario() {
@@ -14,7 +15,8 @@ async function loadCalendario() {
     allWorkDays = data;
     renderCalendar(allWorkDays);
     setupLegendFilter();
-    updateNextWorkdayAlert(); // avviso subito dopo il caricamento
+    updateLegendCounts();
+    updateNextWorkdayAlert();
 }
 
 // -------------------- Render calendario --------------------
@@ -58,16 +60,16 @@ function renderCalendar(workDays) {
             const status = arg.event.title;
             const giustificativo = arg.event.extendedProps.giustificativo;
             const showFlag = giustificativo && ['smart','ferie','supplementare'].includes(status);
-            const allowed = ['smart','ferie','supplementare'];
 
             return {
                 html: `
                     <div class="workday-card status-${status}" style="position:relative; cursor:pointer; padding:5px;">
                         <div class="wd-status">${getStatusLabel(status)}</div>
                         ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${allowed.includes(status) ? `<label style="position:absolute; top:5px; right:5px; font-size:12px;">
-                            <input type="checkbox" class="toggle-giustificativo" data-event-id="${arg.event.id}" ${giustificativo ? 'checked' : ''}> G
-                        </label>` : ''}
+                        ${['smart','ferie','supplementare'].includes(status) ?
+                            `<label style="position:absolute; top:5px; right:5px; font-size:12px;">
+                                <input type="checkbox" class="toggle-giustificativo" data-event-id="${arg.event.id}" ${giustificativo ? 'checked' : ''}> G
+                            </label>` : ''}
                     </div>
                 `
             };
@@ -88,24 +90,12 @@ function renderCalendar(workDays) {
                     await toggleEventGiustificativo(eventId, newValue);
                 });
             }
-        },
-
-        dayCellClassNames: function(arg) {
-            const todayStr = new Date().toDateString();
-            if(arg.date.toDateString() === todayStr){
-                const todayEvent = workDays.find(d => d.date === arg.date.toISOString().slice(0,10));
-                if(todayEvent){
-                    return ['current-day-border', `current-day-${todayEvent.status}`];
-                } else {
-                    return ['current-day-border', 'current-day-default'];
-                }
-            }
-            return [];
         }
     });
 
     calendar.render();
     updateLegendCounts();
+    updateNextWorkdayAlert();
 }
 
 // -------------------- Status label --------------------
@@ -121,7 +111,7 @@ function getStatusLabel(status){
     }
 }
 
-// -------------------- Eventi filtrati secondo legenda --------------------
+// -------------------- Eventi filtrati --------------------
 function getFilteredEvents() {
     let filtered = allWorkDays;
     if (activeStatusFilter) filtered = filtered.filter(d => d.status === activeStatusFilter);
@@ -144,7 +134,7 @@ function getFilteredEvents() {
     return [...bgEvents, ...events];
 }
 
-// -------------------- Setup legenda cliccabile --------------------
+// -------------------- Legenda cliccabile --------------------
 function setupLegendFilter() {
     document.querySelectorAll('.legend-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -198,18 +188,28 @@ function getColor(status) {
     }
 }
 
-// -------------------- Toggle giustificativo evento --------------------
+// -------------------- Toggle giustificativo --------------------
 async function toggleEventGiustificativo(eventId, newValue){
     const event = calendar.getEventById(eventId);
     if(!event) return;
 
-    event.setExtendedProp('giustificativo', newValue);
+    // Controllo massimo smart
+    if(event.title === 'smart' && newValue){
+        const thisMonth = new Date(event.start);
+        const monthStr = thisMonth.toISOString().slice(0,7);
+        const smartCount = allWorkDays.filter(d => d.status==='smart' && d.date.startsWith(monthStr)).length;
+        if(smartCount >= SMART_MAX){
+            alert(`Non puoi avere più di ${SMART_MAX} giorni di Smart Working in questo mese`);
+            updateCalendarEvent(event);
+            return;
+        }
+    }
 
+    event.setExtendedProp('giustificativo', newValue);
     const el = event.el;
     if(el){
-        const showFlag = newValue && ['smart','ferie','supplementare'].includes(event.title);
         el.querySelector('.wd-flag')?.remove();
-        if(showFlag){
+        if(newValue && ['smart','ferie','supplementare'].includes(event.title)){
             const div = document.createElement('div');
             div.className = 'wd-flag';
             div.textContent = '✅ Giustificativo';
@@ -221,6 +221,7 @@ async function toggleEventGiustificativo(eventId, newValue){
     if(idx >= 0) allWorkDays[idx].giustificativo = newValue;
 
     updateNextWorkdayAlert();
+    updateLegendCounts();
 
     await supabaseClient
         .from("work_days")
@@ -228,7 +229,7 @@ async function toggleEventGiustificativo(eventId, newValue){
         .eq('id', eventId);
 }
 
-// -------------------- Prossimo giorno lavorativo --------------------
+// -------------------- Giorno lavorativo successivo --------------------
 function getNextWorkday(date) {
     const next = new Date(date);
     next.setDate(next.getDate() + 1);
@@ -238,7 +239,7 @@ function getNextWorkday(date) {
     return next;
 }
 
-// -------------------- Avviso giorno successivo --------------------
+// -------------------- Avviso giustificativo --------------------
 function updateNextWorkdayAlert(){
     const alertEl = document.getElementById('next-workday-alert');
     if(!alertEl) return;
@@ -272,8 +273,6 @@ function updateLegendCounts() {
 
 // -------------------- Avvia calendario --------------------
 loadCalendario();
-
-
 
 /*
 let calendar;
