@@ -423,23 +423,34 @@ function countSmartInMonth(date) {
     ).length;
 }
 
-function checkTomorrowGiustificativo() {
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().slice(0,10);
+// controllo presenza giustificativo
+function getNextWorkday(date) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + 1);
 
+    // salta weekend
+    while(next.getDay() === 0 || next.getDay() === 6){ // 0 = domenica, 6 = sabato
+        next.setDate(next.getDate() + 1);
+    }
+    return next;
+}
+
+function checkNextWorkdayGiustificativo() {
+    const today = new Date();
     const todayStr = today.toISOString().slice(0,10);
     const todayEvent = allWorkDays.find(d => d.date === todayStr);
 
-    if(!todayEvent || !todayEvent.giustificativo) return; // nessun giustificativo oggi, esci
+    if(!todayEvent || !todayEvent.giustificativo) return; // niente giustificativo oggi
 
-    const tomorrowEvent = allWorkDays.find(d => d.date === tomorrowStr);
-    if(tomorrowEvent && ['smart','ferie','supplementare'].includes(tomorrowEvent.status)) {
+    const nextWorkday = getNextWorkday(today);
+    const nextStr = nextWorkday.toISOString().slice(0,10);
+    const nextEvent = allWorkDays.find(d => d.date === nextStr);
+
+    if(nextEvent && ['smart','ferie','supplementare'].includes(nextEvent.status)) {
         Swal.fire({
             icon: 'info',
             title: 'Attenzione Giustificativo',
-            text: `Oggi (${todayStr}) hai il giustificativo, e domani (${tomorrowStr}) è previsto ${getStatusLabel(tomorrowEvent.status)}.`,
+            text: `Oggi (${todayStr}) hai il giustificativo, e il prossimo giorno lavorativo (${nextStr}) è previsto ${getStatusLabel(nextEvent.status)}.`,
             confirmButtonText: 'Ok'
         });
     }
@@ -448,5 +459,5 @@ function checkTomorrowGiustificativo() {
 // -------------------- Avvia calendario --------------------
 //loadCalendario();
 loadCalendario().then(() => {
-    checkTomorrowGiustificativo();
+    checkNextWorkdayGiustificativo();
 });
