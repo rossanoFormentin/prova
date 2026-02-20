@@ -54,25 +54,20 @@ function renderCalendar(workDays) {
             }
         },
 
-        eventClick: function(info) {
-            if(info.event.display !== 'background') {
-                // toggle giustificativo direttamente senza modale
-                toggleEventGiustificativo(info.event.id);
-            }
-        },
-
         eventContent: function(arg) {
             const status = arg.event.title;
-            const note = arg.event.extendedProps.note || '';
             const giustificativo = arg.event.extendedProps.giustificativo;
             const showFlag = giustificativo && ['smart','ferie','supplementare'].includes(status);
+            const allowed = ['smart','ferie','supplementare'];
 
             return {
                 html: `
-                    <div class="workday-card status-${status}" style="height:100%; width:100%; cursor:pointer;">
+                    <div class="workday-card status-${status}" style="position:relative; cursor:pointer; padding:5px;">
                         <div class="wd-status">${getStatusLabel(status)}</div>
                         ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-                        ${note ? `<div class="wd-note">${note}</div>` : ''}
+                        ${allowed.includes(status) ? `<label style="position:absolute; top:5px; right:5px; font-size:12px;">
+                            <input type="checkbox" class="toggle-giustificativo" data-event-id="${arg.event.id}" ${giustificativo ? 'checked' : ''}> G
+                        </label>` : ''}
                     </div>
                 `
             };
@@ -84,6 +79,16 @@ function renderCalendar(workDays) {
             info.el.style.border = "none";
             info.el.style.color = "#000";
             info.el.style.boxShadow = "none";
+
+            // Aggiungi listener al checkbox solo se presente
+            const checkbox = info.el.querySelector('.toggle-giustificativo');
+            if(checkbox){
+                checkbox.addEventListener('change', async function(){
+                    const newValue = this.checked;
+                    const eventId = this.dataset.eventId;
+                    await toggleEventGiustificativo(eventId, newValue);
+                });
+            }
         },
 
         dayCellClassNames: function(arg) {
@@ -198,34 +203,29 @@ function getColor(status) {
 }
 
 // -------------------- Toggle giustificativo evento --------------------
-async function toggleEventGiustificativo(eventId){
+async function toggleEventGiustificativo(eventId, newValue){
     const event = calendar.getEventById(eventId);
     if(!event) return;
-
-    const current = event.extendedProps.giustificativo || false;
-    const newValue = !current;
 
     event.setExtendedProp('giustificativo', newValue);
 
     const el = event.el;
     if(el){
         const showFlag = newValue && ['smart','ferie','supplementare'].includes(event.title);
-        el.innerHTML = `
-            <div class="workday-card status-${event.title}">
-                <div class="wd-status">${getStatusLabel(event.title)}</div>
-                ${showFlag ? '<div class="wd-flag">✅ Giustificativo</div>' : ''}
-            </div>
-        `;
+        el.querySelector('.wd-flag')?.remove();
+        if(showFlag){
+            const div = document.createElement('div');
+            div.className = 'wd-flag';
+            div.textContent = '✅ Giustificativo';
+            el.querySelector('.workday-card').appendChild(div);
+        }
     }
 
-    // Aggiorna array locale
     const idx = allWorkDays.findIndex(d => d.id?.toString() === eventId.toString());
     if(idx >= 0) allWorkDays[idx].giustificativo = newValue;
 
-    // Aggiorna alert
     updateNextWorkdayAlert();
 
-    // Salva su DB
     await supabaseClient
         .from("work_days")
         .update({ giustificativo: newValue })
@@ -260,8 +260,10 @@ function updateNextWorkdayAlert(){
     const nextStr = nextWorkday.toISOString().slice(0,10);
     const nextEvent = allWorkDays.find(d => d.date === nextStr);
 
-    if(nextEvent && ['smart','ferie','supplementare'].includes(nextEvent.status)) {
-        alertEl.textContent = `Attenzione: oggi (${todayStr}) hai il giustificativo e il prossimo giorno lavorativo (${nextStr}) è previsto ${getStatusLabel(nextEvent.status)}.`;
+    if(nextEvent &&
+       ['smart','ferie','supplementare'].includes(nextEvent.status) &&
+       !nextEvent.giustificativo) {
+        alertEl.textContent = `Attenzione: oggi (${todayStr}) hai il giustificativo e il prossimo giorno lavorativo (${nextStr}) è previsto ${getStatusLabel(nextEvent.status)} senza giustificativo.`;
     } else {
         alertEl.textContent = '';
     }
